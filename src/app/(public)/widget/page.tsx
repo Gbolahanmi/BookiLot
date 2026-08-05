@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ interface TimeSlot {
 
 type Step = "service" | "datetime" | "details" | "confirm";
 
-export default function WidgetPage() {
+function WidgetContent() {
   const searchParams = useSearchParams();
   const orgId = searchParams.get("orgId") || "";
 
@@ -43,7 +43,6 @@ export default function WidgetPage() {
   const [bookingComplete, setBookingComplete] = useState(false);
   const [manageUrl, setManageUrl] = useState("");
 
-  // Fetch services
   useEffect(() => {
     if (!orgId) return;
     fetch(`/api/services?orgId=${orgId}`)
@@ -52,7 +51,6 @@ export default function WidgetPage() {
       .catch(() => {});
   }, [orgId]);
 
-  // Fetch available slots
   const fetchSlots = useCallback(async () => {
     if (!orgId || !selectedService || !selectedDate) return;
     setLoading(true);
@@ -90,14 +88,13 @@ export default function WidgetPage() {
     setError("");
 
     try {
-      // Create or find customer
       const bookingRes = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId: orgId,
           serviceId: selectedService.id,
-          customerId: "temp", // TODO: proper customer creation
+          customerId: "temp",
           startsAt: selectedSlot.startsAt,
           channel: "web",
         }),
@@ -173,7 +170,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 1: Service */}
         {step === "service" && (
           <div className="space-y-3">
             <p className="text-sm text-gray-500">Select a service</p>
@@ -214,7 +210,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 2: Date/Time */}
         {step === "datetime" && (
           <div className="space-y-4">
             <button
@@ -297,7 +292,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 3: Details */}
         {step === "details" && (
           <div className="space-y-4">
             <button
@@ -353,7 +347,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 4: Confirmation */}
         {step === "confirm" && bookingComplete && (
           <div className="space-y-4 py-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
@@ -394,5 +387,19 @@ export default function WidgetPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function WidgetPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-sm text-gray-400">Loading...</p>
+        </div>
+      }
+    >
+      <WidgetContent />
+    </Suspense>
   );
 }

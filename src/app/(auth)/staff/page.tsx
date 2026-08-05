@@ -1,9 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import useSWR from "swr";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SkeletonCard } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 interface StaffForm {
   displayName: string;
@@ -12,7 +17,7 @@ interface StaffForm {
 }
 
 export default function StaffPage() {
-  const [staff, setStaff] = useState<Array<{ id: string } & StaffForm>>([]);
+  const { data: staff, error, isLoading, mutate } = useSWR("/api/staff", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<StaffForm>({
     displayName: "",
@@ -20,32 +25,59 @@ export default function StaffPage() {
     email: "",
   });
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleSubmit = async () => {
     if (!form.displayName) return;
     setLoading(true);
+    setSubmitError("");
 
-    // TODO: Call API
-    const newStaff = { id: crypto.randomUUID(), ...form };
-    setStaff([...staff, newStaff]);
-    setForm({ displayName: "", bio: "", email: "" });
-    setShowForm(false);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to add staff member");
+      }
+
+      mutate();
+      setForm({ displayName: "", bio: "", email: "" });
+      setShowForm(false);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
           <Button onClick={() => setShowForm(true)}>Add Staff Member</Button>
         </div>
+
+        {error && (
+          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            Failed to load staff. Please try again later.
+          </div>
+        )}
 
         {showForm && (
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               New Staff Member
             </h2>
+            {submitError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {submitError}
+              </div>
+            )}
             <div className="space-y-4 max-w-lg">
               <Input
                 id="displayName"
@@ -85,16 +117,25 @@ export default function StaffPage() {
         )}
 
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-          {staff.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-sm">No staff members yet</p>
-              <p className="text-xs mt-1">
-                Add staff members to assign bookings to specific people.
-              </p>
+          {isLoading ? (
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
             </div>
+          ) : staff?.length === 0 ? (
+            <EmptyState
+              title="No staff members yet"
+              description="Add staff members to assign bookings to specific people."
+              action={
+                <Button onClick={() => setShowForm(true)} size="sm">
+                  Add Staff Member
+                </Button>
+              }
+            />
           ) : (
             <div className="divide-y divide-gray-200">
-              {staff.map((member) => (
+              {staff?.map((member: { id: string; displayName: string; email?: string; bio?: string }) => (
                 <div
                   key={member.id}
                   className="flex items-center justify-between p-4"

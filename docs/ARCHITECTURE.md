@@ -171,27 +171,33 @@ GET /api/availability?orgId=X&serviceId=Y&date=2025-01-15
 
 ```
 ┌─────────────────────────────────────────┐
-│  Auth0 Organizations                    │
+│  AuthJS (NextAuth v5)                   │
 │  ┌─────────────┐  ┌─────────────┐      │
-│  │ Org: Salons │  │ Org: Clinics│ ...  │
-│  │  └─ Owner   │  │  └─ Owner   │      │
-│  │  └─ Staff   │  │  └─ Staff   │      │
-│  └─────────────┘  └─────────────┘      │
+│  │ Providers:  │  │ Session:    │      │
+│  │ - Google    │  │ - id        │      │
+│  │ - Email/PW  │  │ - email     │      │
+│  └─────────────┘  │ - role      │      │
+│                    │ - status    │      │
+│                    │ - orgId     │      │
+│                    └─────────────┘      │
 └─────────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────┐
-│  JWT contains:                          │
-│  - sub (Auth0 user ID)                 │
-│  - org_id (Organization ID)            │
-│  - role (owner | staff | super_admin)  │
+│  Account Status Lifecycle               │
+│  pending → email_verified → active      │
+│                                         │
+│  pending:     Can only verify email     │
+│  email_verified: Can access dashboard   │
+│                  (with setup banner)    │
+│  active:      Full access               │
 └─────────────────────────────────────────┘
                     │
                     ▼
 ┌─────────────────────────────────────────┐
 │  Tenant Resolution                      │
-│  1. Extract org_id from JWT             │
-│  2. Query user → confirm orgId match    │
+│  1. Get user ID from session            │
+│  2. Query user → get organizationId     │
 │  3. All subsequent queries filter by    │
 │     organizationId                      │
 └─────────────────────────────────────────┘

@@ -3,23 +3,25 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSession } from "next-auth/react";
 
 type Step = 1 | 2 | 3;
 
 export default function OnboardingPage() {
+  const { data: session } = useSession();
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [business, setBusiness] = useState({
     name: "",
     phone: "",
-    email: "",
     address: "",
     timezone: "Africa/Lagos",
   });
 
   const [services, setServices] = useState([
-    { name: "", duration: "30", price: "" },
+    { name: "", duration: "30", price: "", description: "" },
   ]);
 
   const [hours, setHours] = useState(
@@ -32,7 +34,7 @@ export default function OnboardingPage() {
   );
 
   const addService = () => {
-    setServices([...services, { name: "", duration: "30", price: "" }]);
+    setServices([...services, { name: "", duration: "30", price: "", description: "" }]);
   };
 
   const updateService = (
@@ -51,10 +53,35 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setLoading(true);
-    // TODO: Call API to save onboarding data
-    setTimeout(() => {
+    setError("");
+
+    try {
+      const res = await fetch("/api/onboarding/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          business: {
+            ...business,
+            email: session?.user?.email,
+          },
+          services: services.filter((s) => s.name),
+          workingHours: hours,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to complete setup");
+        setLoading(false);
+        return;
+      }
+
       window.location.href = "/dashboard";
-    }, 1500);
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,6 +118,12 @@ export default function OnboardingPage() {
           ))}
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           {/* Step 1: Business Info */}
           {step === 1 && (
@@ -98,6 +131,11 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-semibold text-gray-900">
                 Business Information
               </h2>
+              {session?.user?.email && (
+                <p className="text-sm text-gray-500">
+                  Business email: <span className="font-medium text-gray-700">{session.user.email}</span>
+                </p>
+              )}
               <Input
                 id="name"
                 label="Business Name"
@@ -120,24 +158,30 @@ export default function OnboardingPage() {
                 required
               />
               <Input
-                id="email"
-                label="Email"
-                type="email"
-                placeholder="hello@mysalon.com"
-                value={business.email}
-                onChange={(e) =>
-                  setBusiness({ ...business, email: e.target.value })
-                }
-              />
-              <Input
                 id="address"
-                label="Address"
+                label="Address (optional)"
                 placeholder="123 Main St, Lagos"
                 value={business.address}
                 onChange={(e) =>
                   setBusiness({ ...business, address: e.target.value })
                 }
               />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Timezone</label>
+                <select
+                  value={business.timezone}
+                  onChange={(e) =>
+                    setBusiness({ ...business, timezone: e.target.value })
+                  }
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
+                  <option value="Africa/Accra">Africa/Accra (GMT)</option>
+                  <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
+                  <option value="Africa/Johannesburg">Africa/Johannesburg (SAST)</option>
+                  <option value="Africa/Cairo">Africa/Cairo (EET)</option>
+                </select>
+              </div>
               <div className="pt-4">
                 <Button
                   onClick={() => setStep(2)}
@@ -183,6 +227,12 @@ export default function OnboardingPage() {
                     placeholder="e.g. Haircut"
                     value={service.name}
                     onChange={(e) => updateService(i, "name", e.target.value)}
+                  />
+                  <Input
+                    id={`svc-desc-${i}`}
+                    placeholder="Brief description (optional)"
+                    value={service.description}
+                    onChange={(e) => updateService(i, "description", e.target.value)}
                   />
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">

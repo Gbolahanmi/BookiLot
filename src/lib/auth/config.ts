@@ -1,6 +1,10 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import bcrypt from "bcryptjs";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -15,24 +19,92 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        // TODO: Implement real credential auth against your DB
-        // For now, return null (unauthenticated)
-        return null;
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = String(credentials.email).toLowerCase().trim();
+
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (!user || !user.passwordHash) return null;
+
+        const valid = await bcrypt.compare(
+          String(credentials.password),
+          user.passwordHash
+        );
+
+        if (!valid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+          organizationId: user.organizationId,
+        };
       },
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user.email) {
+        const email = user.email.toLowerCase();
+        const [existing] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (existing) {
+          // Existing user — mark email as verified
+          await db
+            .update(users)
+            .set({ status: "email_verified" })
+            .where(eq(users.email, email));
+        } else {
+          // New user — create account
+          const [created] = await db
+            .insert(users)
+            .values({
+              email,
+              name: user.name || "",
+              status: "email_verified",
+              role: "owner",
+            })
+            .returning({ id: users.id });
+
+          // Attach the new user ID so jwt callback can find it
+          user.id = created.id;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as Record<string, unknown>).role || "owner";
-        token.organizationId = (user as Record<string, unknown>).organizationId || null;
+        token.id = user.id;
+        token.role = user.role || "owner";
+        token.organizationId = user.organizationId || null;
+
+        // Fetch status from DB since OAuth providers don't include it
+        const [dbUser] = await db
+          .select({ status: users.status })
+          .from(users)
+          .where(eq(users.id, user.id))
+          .limit(1);
+        token.status = dbUser?.status || "pending";
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as Record<string, unknown>).role = token.role;
-        (session.user as Record<string, unknown>).organizationId = token.organizationId;
+        session.user.id = token.id as string;
+        session.user.role = (token.role as "owner" | "staff" | "super_admin") || "owner";
+        session.user.status = (token.status as "pending" | "email_verified" | "active") || "pending";
+        session.user.organizationId = (token.organizationId as string) || null;
       }
       return session;
     },

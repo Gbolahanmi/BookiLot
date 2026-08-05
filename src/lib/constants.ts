@@ -27,6 +27,15 @@ export const USER_ROLE = {
 
 export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
+// ─── Account Status ─────────────────────────────────────────
+export const ACCOUNT_STATUS = {
+  PENDING: "pending",
+  EMAIL_VERIFIED: "email_verified",
+  ACTIVE: "active",
+} as const;
+
+export type AccountStatus = (typeof ACCOUNT_STATUS)[keyof typeof ACCOUNT_STATUS];
+
 // ─── Subscription Plans ──────────────────────────────────────
 export const SUBSCRIPTION_PLAN = {
   FREE: "free",
@@ -89,9 +98,17 @@ export const PLAN_LIMITS = {
     voiceEnabled: false,
     insightsEnabled: false,
     waitlistEnabled: false,
+    customBranding: false,
+    customDomain: false,
+    websiteBuilder: false,
+    customCss: false,
+    aiResponses: false,
+    aiInsights: false,
+    smsCredits: 0,
+    voiceCredits: 0,
   },
   pro: {
-    maxBookingsPerMonth: -1, // unlimited
+    maxBookingsPerMonth: -1,
     maxStaff: 10,
     maxServices: 50,
     channels: ["web", "sms"] as const,
@@ -99,6 +116,14 @@ export const PLAN_LIMITS = {
     voiceEnabled: false,
     insightsEnabled: true,
     waitlistEnabled: true,
+    customBranding: true,
+    customDomain: false,
+    websiteBuilder: false,
+    customCss: false,
+    aiResponses: true,
+    aiInsights: true,
+    smsCredits: 500,
+    voiceCredits: 0,
   },
   enterprise: {
     maxBookingsPerMonth: -1,
@@ -109,6 +134,14 @@ export const PLAN_LIMITS = {
     voiceEnabled: true,
     insightsEnabled: true,
     waitlistEnabled: true,
+    customBranding: true,
+    customDomain: true,
+    websiteBuilder: true,
+    customCss: true,
+    aiResponses: true,
+    aiInsights: true,
+    smsCredits: -1,
+    voiceCredits: -1,
   },
 } as const;
 
@@ -140,6 +173,7 @@ export const WIDGET_CONFIG = {
   MAX_WIDTH_PX: 480,
   RECOMMENDED_SLOTS_COUNT: 3,
   MAX_SLOTS_PER_DAY: 20,
+  SLOT_INCREMENT_MINUTES: 30,
 } as const;
 
 // ─── Navigation Labels ───────────────────────────────────────

@@ -1,9 +1,9 @@
 import { Inngest } from "inngest";
-import { db } from "./db";
-import { bookings, customers, services, organizations } from "./db/schema";
+import { db } from "@/lib/db";
+import { bookings, customers, services, organizations } from "@/lib/db/schema";
 import { eq, and, lte } from "drizzle-orm";
-import { sendBookingReminder } from "./sms";
-import { sendBookingReminderEmail } from "./email";
+import { sendBookingReminder } from "@/lib/sms";
+import { sendBookingReminderEmail } from "@/lib/email";
 import { addHours, format } from "date-fns";
 import { BOOKING_STATUS, REMINDER_HOURS_BEFORE, NO_SHOW_THRESHOLD_MINUTES } from "@/lib/constants";
 
@@ -15,7 +15,7 @@ export const inngest = new Inngest({ id: "bookilot" });
 export const sendReminder = inngest.createFunction(
   { id: "send-reminder" },
   { event: "booking.created" },
-  async ({ event }) => {
+  async ({ event, step }) => {
     const { bookingId } = event.data;
 
     // Wait until 24h before the appointment
@@ -99,7 +99,7 @@ export const sendReminder = inngest.createFunction(
 export const handleNoShows = inngest.createFunction(
   { id: "handle-no-shows" },
   { event: "cron/15min" },
-  async ({ step }) => {
+  async ({ step: _step }) => {
     const threshold = addHours(new Date(), -NO_SHOW_THRESHOLD_MINUTES / 60);
 
     // Find bookings that passed and are still pending/confirmed

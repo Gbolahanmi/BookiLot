@@ -1,15 +1,5 @@
 node_modules
-
-# environment variables
 .env
-.env.*
-!.env.example
-
-# next.js
-.next/
-out/
-
-# misc
-.DS_Store
-*.tsbuildinfo
-next-env.d.ts
+.env.local
+.env.*.local
+.next

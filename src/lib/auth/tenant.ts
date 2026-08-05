@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
 import { users, organizations } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import type { UserRole } from "@/lib/constants";
 
 /**
  * Get the current AuthJS session.
@@ -15,12 +16,12 @@ export async function getSession() {
  */
 export async function getOrganizationId(): Promise<string | null> {
   const session = await getSession();
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
 
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.auth0Sub, session.user.email || ""))
+    .where(eq(users.id, session.user.id))
     .limit(1);
 
   return user?.organizationId || null;
@@ -31,15 +32,15 @@ export async function getOrganizationId(): Promise<string | null> {
  */
 export async function getUserWithOrganization() {
   const session = await getSession();
-  if (!session?.user) return null;
+  if (!session?.user?.id) return null;
 
   const [user] = await db
     .select({
       id: users.id,
-      auth0Sub: users.auth0Sub,
       email: users.email,
       name: users.name,
       role: users.role,
+      status: users.status,
       organizationId: users.organizationId,
       orgName: organizations.name,
       orgSlug: organizations.slug,
@@ -47,7 +48,7 @@ export async function getUserWithOrganization() {
     })
     .from(users)
     .leftJoin(organizations, eq(users.organizationId, organizations.id))
-    .where(eq(users.email, session.user.email || ""))
+    .where(eq(users.id, session.user.id))
     .limit(1);
 
   return user || null;
@@ -71,6 +72,29 @@ export async function requireOwner() {
   const user = await requireAuth();
   if (user.role !== "owner" && user.role !== "super_admin") {
     throw new Error("Owner access required");
+  }
+  return user;
+}
+
+/**
+ * Require staff role — throws if not staff, owner, or super_admin.
+ */
+export async function requireStaff() {
+  const user = await requireAuth();
+  const allowedRoles: UserRole[] = ["owner", "staff", "super_admin"];
+  if (!allowedRoles.includes(user.role)) {
+    throw new Error("Staff access required");
+  }
+  return user;
+}
+
+/**
+ * Require active account — throws if not active.
+ */
+export async function requireActive() {
+  const user = await requireAuth();
+  if (user.status !== "active") {
+    throw new Error("Account setup not complete");
   }
   return user;
 }
