@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BookiLot | Services Management</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#004666",
+                    "inverse-on-surface": "#eaf1ff",
+                    "surface-container": "#e5eeff",
+                    "error": "#ba1a1a",
+                    "on-primary-container": "#dad7ff",
+                    "tertiary-container": "#a44100",
+                    "surface-container-high": "#dce9ff",
+                    "secondary-fixed": "#c9e6ff",
+                    "on-surface-variant": "#464555",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#001e2f",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#7b2f00",
+                    "on-surface": "#0b1c30",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#0b1c30",
+                    "secondary-fixed-dim": "#89ceff",
+                    "tertiary-fixed": "#ffdbcc",
+                    "on-tertiary-fixed": "#351000",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-bright": "#f8f9ff",
+                    "surface-tint": "#4d44e3",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "inverse-primary": "#c3c0ff",
+                    "primary": "#3525cd",
+                    "on-error-container": "#93000a",
+                    "background": "#f8f9ff",
+                    "secondary-container": "#39b8fd",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-low": "#eff4ff",
+                    "primary-container": "#4f46e5",
+                    "on-tertiary-container": "#ffd2be",
+                    "surface": "#f8f9ff",
+                    "on-primary-fixed": "#0f0069",
+                    "surface-variant": "#d3e4fe",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "secondary": "#006591",
+                    "surface-container-lowest": "#ffffff",
+                    "outline": "#777587",
+                    "on-primary": "#ffffff",
+                    "primary-fixed": "#e2dfff",
+                    "outline-variant": "#c7c4d8",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "tertiary": "#7e3000",
+                    "surface-dim": "#cbdbf5",
+                    "inverse-surface": "#213145",
+                    "on-secondary-fixed-variant": "#004c6e"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max": "1440px",
+                    "xl": "48px",
+                    "md": "16px",
+                    "base": "4px",
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "sm": "8px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-xl": ["Plus Jakarta Sans"],
+                    "label-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-xl": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .modal-overlay {
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease-in-out;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+        .service-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen flex overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="hidden md:flex flex-col h-screen w-64 bg-surface-container-low shrink-0 border-r border-outline-variant/30 p-md space-y-base">
+<div class="mb-lg px-sm">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">BookiLot</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Management Portal</p>
+</div>
+<nav class="flex-1 space-y-1">
+<!-- Navigation Items Mapping -->
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-md">Calendar</span>
+</a>
+<!-- Active State: Services -->
+<a class="flex items-center gap-md px-md py-sm bg-primary-container text-on-primary-container rounded-lg font-semibold translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">layers</span>
+<span class="font-label-md">Services</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md">Customers</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">record_voice_over</span>
+<span class="font-label-md">Voice Agent</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-md">Billing</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md">Settings</span>
+</a>
+</nav>
+<div class="mt-auto space-y-1">
+<button class="w-full bg-secondary-container text-on-secondary-container py-sm px-md rounded-xl font-semibold flex items-center justify-center gap-sm hover:opacity-90 transition-opacity mb-md">
+<span class="material-symbols-outlined">smart_toy</span>
+                Launch AI Agent
+            </button>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-md">Help Center</span>
+</a>
+<a class="flex items-center gap-md px-md py-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all duration-200" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-label-md">Log Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 h-screen overflow-y-auto bg-background">
+<!-- Top Row -->
+<header class="sticky top-0 z-10 bg-surface/80 backdrop-blur-md px-lg py-md flex justify-between items-center max-w-container-max mx-auto w-full">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Services</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure and manage your bookable offerings</p>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all w-64" placeholder="Search services..." type="text"/>
+</div>
+<button class="bg-primary text-on-primary px-lg py-2.5 rounded-lg font-semibold flex items-center gap-sm shadow-sm hover:shadow-md active:scale-95 transition-all" onclick="toggleModal(true)">
+<span class="material-symbols-outlined">add</span>
+                    Add New Service
+                </button>
+</div>
+</header>
+<!-- Main View Canvas -->
+<div class="px-lg pb-xl max-w-container-max mx-auto w-full">
+<!-- Quick Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg mb-xl mt-md">
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant/30 flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">list_alt</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Total Services</p>
+<p class="text-headline-md font-headline-md">12</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant/30 flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-secondary-container/20 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Avg. Duration</p>
+<p class="text-headline-md font-headline-md">45m</p>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl border border-outline-variant/30 flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider">Revenue Stream</p>
+<p class="text-headline-md font-headline-md">$1,240</p>
+</div>
+</div>
+</div>
+<!-- Bento Grid of Services -->
+<div class="bento-grid" id="services-list">
+<!-- Card 1 -->
+<div class="service-card bg-surface-container-lowest border border-outline-variant/50 p-lg rounded-xl relative group">
+<div class="flex justify-between items-start mb-md">
+<div class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-[10px] uppercase tracking-tighter">Wellness</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs text-on-surface">Deep Tissue Massage</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg line-clamp-2">Intense therapy focusing on realigning deeper layers of muscles and connective tissue.</p>
+<div class="flex items-center gap-lg mb-lg">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-label-md">60 min</span>
+</div>
+<div class="flex items-center gap-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="font-label-md">$85</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-md border-t border-outline-variant/20">
+<span class="flex items-center gap-xs text-on-secondary-container bg-secondary-container/20 px-sm py-1 rounded-full text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span> Active
+                        </span>
+<div class="flex gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container rounded-lg text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-2 hover:bg-error-container/20 rounded-lg text-error transition-colors"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="service-card bg-surface-container-lowest border border-outline-variant/50 p-lg rounded-xl relative group">
+<div class="flex justify-between items-start mb-md">
+<div class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-[10px] uppercase tracking-tighter">Skincare</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs text-on-surface">Radiance Renewal Facial</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg line-clamp-2">A luxurious facial treatment designed to brighten, hydrate, and refresh dull skin.</p>
+<div class="flex items-center gap-lg mb-lg">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-label-md">45 min</span>
+</div>
+<div class="flex items-center gap-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="font-label-md">$65</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-md border-t border-outline-variant/20">
+<span class="flex items-center gap-xs text-on-secondary-container bg-secondary-container/20 px-sm py-1 rounded-full text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span> Active
+                        </span>
+<div class="flex gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container rounded-lg text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-2 hover:bg-error-container/20 rounded-lg text-error transition-colors"><span class="material-symbols-outlined text-[20px]">visibility_off</span></button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="service-card bg-surface-container-lowest border border-outline-variant/50 p-lg rounded-xl relative group">
+<div class="flex justify-between items-start mb-md">
+<div class="px-sm py-xs bg-surface-container text-on-surface-variant rounded-md font-label-sm text-[10px] uppercase tracking-tighter">Hair</div>
+<button class="text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline-md text-headline-md mb-xs text-on-surface">Signature Haircut</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-lg line-clamp-2">Precision cutting and styling tailored to your face shape and personal style.</p>
+<div class="flex items-center gap-lg mb-lg">
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">schedule</span>
+<span class="font-label-md">30 min</span>
+</div>
+<div class="flex items-center gap-xs text-primary font-semibold">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="font-label-md">$45</span>
+</div>
+</div>
+<div class="flex justify-between items-center pt-md border-t border-outline-variant/20">
+<span class="flex items-center gap-xs text-outline bg-outline-variant/20 px-sm py-1 rounded-full text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span> Hidden
+                        </span>
+<div class="flex gap-sm opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 hover:bg-surface-container rounded-lg text-outline transition-colors"><span class="material-symbols-outlined text-[20px]">edit</span></button>
+<button class="p-2 hover:bg-secondary-container/20 rounded-lg text-secondary transition-colors"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden by default) -->
+<div class="hidden flex-col items-center justify-center py-xl bg-surface-container-lowest border border-dashed border-outline-variant rounded-3xl mt-md" id="empty-state">
+<div class="w-64 h-64 mb-lg relative overflow-hidden rounded-2xl">
+<img class="w-full h-full object-cover grayscale opacity-60" data-alt="A minimal and elegant digital illustration of a calm, empty workspace with floating geometric shapes and soft pastel colors. The style is modern corporate minimalism with high-quality white space and subtle indigo accents. The mood is expectant and professional, designed for a software empty state screen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMnk8evBH4vb_1ZSB6kP8IB7xBU5KLrfPbDyF6NcgfYLuWQPxT-ndkuc6lGwpq5eeMPYrI2FWi9-8lf_-n5VPpkQ_LdRnr6ZcDhp2l6YzicUDvBDqbEOD2ZJBJbKi8djh296gAQOAL96qDiLzVuhVUfzASyUQmkltzgr8ImwNsRbnFSD6VfX8Q0ImMoi4Pr3xTT8t4EIaS21g_U2T_dFlswgcbtX_b5JtDLykxx9FvuFPHMePjuRW_xRZ-nus7Iv5n9kY1d5OjdDju"/>
+</div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-xs">No services found</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg text-center max-w-sm">Start building your business offerings by adding your first service package.</p>
+<button class="bg-primary text-on-primary px-lg py-3 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all" onclick="toggleModal(true)">
+                    Create First Service
+                </button>
+</div>
+</div>
+</main>
+<!-- Modal Form Shell -->
+<div class="fixed inset-0 z-50 flex items-center justify-center hidden" id="service-modal">
+<div class="modal-overlay absolute inset-0 bg-on-surface/40" onclick="toggleModal(false)"></div>
+<div class="bg-surface relative z-10 w-full max-w-xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-300">
+<div class="px-lg py-md bg-surface-container border-b border-outline-variant/30 flex justify-between items-center">
+<h3 class="font-headline-md text-headline-md text-on-surface">Add New Service</h3>
+<button class="p-2 hover:bg-surface-variant/20 rounded-full transition-colors" onclick="toggleModal(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="p-lg space-y-md" onsubmit="event.preventDefault(); toggleModal(false);">
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Service Name</label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g., Deep Tissue Massage" type="text"/>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Description</label>
+<textarea class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="Briefly describe what this service includes..." rows="3"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-lg">
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Price ($)</label>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="0.00" type="number"/>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Duration (min)</label>
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none">
+<option>15 min</option>
+<option>30 min</option>
+<option>45 min</option>
+<option>60 min</option>
+<option>90 min</option>
+</select>
+</div>
+</div>
+<div class="space-y-base">
+<label class="font-label-md text-label-md text-on-surface-variant">Buffer Time (min)</label>
+<div class="flex items-center gap-md">
+<input class="flex-1 accent-primary" max="60" min="0" step="5" type="range"/>
+<span class="font-label-md text-primary w-12 text-right">15m</span>
+</div>
+<p class="text-[11px] text-outline">Time needed between sessions for cleanup and preparation.</p>
+</div>
+<div class="pt-lg flex gap-md">
+<button class="flex-1 px-lg py-3 border border-outline-variant rounded-xl font-semibold text-on-surface-variant hover:bg-surface-container-low transition-colors" onclick="toggleModal(false)" type="button">
+                        Cancel
+                    </button>
+<button class="flex-1 px-lg py-3 bg-primary text-on-primary rounded-xl font-semibold shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all" type="submit">
+                        Create Service
+                    </button>
+</div>
+</form>
+</div>
+</div>
+<!-- Scripts for Micro-interactions -->
+<script>
+        function toggleModal(show) {
+            const modal = document.getElementById('service-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Search highlight effect
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput?.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('ring-2', 'ring-primary/10');
+        });
+        searchInput?.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('ring-2', 'ring-primary/10');
+        });
+
+        // Demo function to show empty state
+        function toggleEmptyState(isEmpty) {
+            const list = document.getElementById('services-list');
+            const empty = document.getElementById('empty-state');
+            if(isEmpty) {
+                list.classList.add('hidden');
+                empty.classList.remove('hidden');
+            } else {
+                list.classList.remove('hidden');
+                empty.classList.add('hidden');
+            }
+        }
+    </script>
+</body></html>

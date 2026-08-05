@@ -90,10 +90,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationId = user.organizationId || null;
 
         // Fetch status from DB since OAuth providers don't include it
+        const userId = user.id as string;
         const [dbUser] = await db
           .select({ status: users.status })
           .from(users)
-          .where(eq(users.id, user.id))
+          .where(eq(users.id, userId))
           .limit(1);
         token.status = dbUser?.status || "pending";
       }
