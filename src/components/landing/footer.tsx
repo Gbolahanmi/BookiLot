@@ -56,7 +56,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-8 sm:flex-row">
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Bookilot. Made in Lagos, Nigeria.
+            &copy; {new Date().getFullYear()} Bookilot. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             {/* Twitter/X */}

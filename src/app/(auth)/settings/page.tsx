@@ -20,7 +20,7 @@ export default function SettingsPage() {
     email: "",
     address: "",
     description: "",
-    timezone: "Africa/Lagos",
+    timezone: "UTC",
   });
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export default function SettingsPage() {
         email: settings.email || "",
         address: settings.address || "",
         description: settings.description || "",
-        timezone: settings.timezone || "Africa/Lagos",
+        timezone: settings.timezone || "UTC",
       });
     }
   }, [settings]);
@@ -95,7 +95,7 @@ export default function SettingsPage() {
                   id="phone"
                   label="Phone Number"
                   type="tel"
-                  placeholder="+234 xxx xxx xxxx"
+                  placeholder="+1 (555) 123-4567"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                 <Input
                   id="address"
                   label="Address"
-                  placeholder="123 Main St, Lagos"
+                  placeholder="123 Main St, New York"
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
                 />

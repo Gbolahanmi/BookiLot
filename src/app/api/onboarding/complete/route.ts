@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         phone: business.phone,
         email: business.email || session.user.email,
         address: business.address || null,
-        timezone: business.timezone || "Africa/Lagos",
+        timezone: business.timezone || "UTC",
       })
       .returning({ id: organizations.id });
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         description: svc.description || null,
         durationMinutes: parseInt(svc.duration) || 30,
         priceCents: svc.price ? Math.round(parseFloat(svc.price) * 100) : 0,
-        currency: "NGN",
+        currency: business.currency || "USD",
       });
     }
 

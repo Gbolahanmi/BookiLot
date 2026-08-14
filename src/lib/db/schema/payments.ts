@@ -27,7 +27,7 @@ export const payments = pgTable("payments", {
     .references(() => organizations.id),
   bookingId: uuid("booking_id").references(() => bookings.id),
   amountCents: integer("amount_cents").notNull(),
-  currency: varchar("currency", { length: 3 }).notNull().default("NGN"),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   provider: paymentProviderEnum("provider").notNull(),
   providerRef: varchar("provider_ref", { length: 255 }),
   status: paymentStatusEnum("status").notNull().default("pending"),

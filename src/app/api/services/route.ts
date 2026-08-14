@@ -3,29 +3,28 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { services } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { requireOwner, requireStaff } from "@/lib/auth/tenant";
 
 const createServiceSchema = z.object({
-  organizationId: z.string().uuid(),
   name: z.string().min(1).max(255),
   description: z.string().optional(),
   durationMinutes: z.number().int().min(5).max(480),
   priceCents: z.number().int().min(0),
-  currency: z.string().length(3).default("NGN"),
+  currency: z.string().length(3).optional(),
   bufferMinutes: z.number().int().min(0).max(60).default(10),
   depositRequired: z.boolean().default(false),
   depositAmountCents: z.number().int().min(0).default(0),
 });
 
 /**
- * GET /api/services?orgId=xxx
+ * GET /api/services — returns services for the authenticated user's org
  */
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const orgId = searchParams.get("orgId");
+export async function GET() {
+  const user = await requireStaff();
 
-  if (!orgId) {
+  if (!user.organizationId) {
     return NextResponse.json(
-      { error: "organizationId is required" },
+      { error: "No organization linked to this account" },
       { status: 400 }
     );
   }
@@ -33,15 +32,29 @@ export async function GET(request: NextRequest) {
   const result = await db
     .select()
     .from(services)
-    .where(and(eq(services.organizationId, orgId), eq(services.active, true)));
+    .where(
+      and(
+        eq(services.organizationId, user.organizationId),
+        eq(services.active, true)
+      )
+    );
 
   return NextResponse.json({ services: result });
 }
 
 /**
- * POST /api/services
+ * POST /api/services — create a service for the authenticated user's org
  */
 export async function POST(request: NextRequest) {
+  const user = await requireOwner();
+
+  if (!user.organizationId) {
+    return NextResponse.json(
+      { error: "No organization linked to this account" },
+      { status: 400 }
+    );
+  }
+
   const body = await request.json();
 
   const parsed = createServiceSchema.safeParse(body);
@@ -52,7 +65,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const [service] = await db.insert(services).values(parsed.data).returning();
+  const [service] = await db
+    .insert(services)
+    .values({ ...parsed.data, organizationId: user.organizationId })
+    .returning();
 
   return NextResponse.json({ service }, { status: 201 });
 }

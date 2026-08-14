@@ -4,10 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 
 const SERVICES = [
-  { id: 1, name: "Haircut", duration: "30 min", price: "₦3,000", icon: "✂️" },
-  { id: 2, name: "Braiding", duration: "2 hrs", price: "₦15,000", icon: "💇" },
-  { id: 3, name: "Manicure", duration: "45 min", price: "₦2,500", icon: "💅" },
-  { id: 4, name: "Facial", duration: "1 hr", price: "₦5,000", icon: "✨" },
+  { id: 1, name: "Haircut", duration: "30 min", price: "$25", icon: "✂️" },
+  { id: 2, name: "Braiding", duration: "2 hrs", price: "$120", icon: "💇" },
+  { id: 3, name: "Manicure", duration: "45 min", price: "$20", icon: "💅" },
+  { id: 4, name: "Facial", duration: "1 hr", price: "$45", icon: "✨" },
 ];
 
 const TIME_SLOTS = [
@@ -83,10 +83,10 @@ export function Hero() {
         {/* Social proof */}
         <div className="mt-16 text-center">
           <p className="text-sm font-medium text-gray-400">
-            Trusted by 2,500+ businesses across Nigeria
+            Trusted by 2,500+ businesses worldwide
           </p>
           <div className="mt-4 flex items-center justify-center gap-8 text-gray-300">
-            {["Chidi's Salon", "Lagos Clinic", "Relax Spa", "FitZone Gym", "Style Studio"].map(
+            {["Style Studio", "Urban Spa", "FitZone Gym", "Glow Salon", "Nail Art Co"].map(
               (name) => (
                 <span key={name} className="text-sm font-semibold">
                   {name}

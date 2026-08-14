@@ -17,7 +17,7 @@ export default function OnboardingPage() {
     name: "",
     phone: "",
     address: "",
-    timezone: "Africa/Lagos",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   });
 
   const [services, setServices] = useState([
@@ -150,7 +150,7 @@ export default function OnboardingPage() {
                 id="phone"
                 label="Phone Number"
                 type="tel"
-                placeholder="+234 xxx xxx xxxx"
+                placeholder="+1 (555) 123-4567"
                 value={business.phone}
                 onChange={(e) =>
                   setBusiness({ ...business, phone: e.target.value })
@@ -160,7 +160,7 @@ export default function OnboardingPage() {
               <Input
                 id="address"
                 label="Address (optional)"
-                placeholder="123 Main St, Lagos"
+                placeholder="123 Main St, New York"
                 value={business.address}
                 onChange={(e) =>
                   setBusiness({ ...business, address: e.target.value })
@@ -175,11 +175,30 @@ export default function OnboardingPage() {
                   }
                   className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 >
-                  <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
-                  <option value="Africa/Accra">Africa/Accra (GMT)</option>
-                  <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
-                  <option value="Africa/Johannesburg">Africa/Johannesburg (SAST)</option>
-                  <option value="Africa/Cairo">Africa/Cairo (EET)</option>
+                  <optgroup label="Americas">
+                    <option value="America/New_York">Eastern Time (US & Canada)</option>
+                    <option value="America/Chicago">Central Time (US & Canada)</option>
+                    <option value="America/Denver">Mountain Time (US & Canada)</option>
+                    <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                    <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+                    <option value="America/Mexico_City">Mexico City (CST)</option>
+                  </optgroup>
+                  <optgroup label="Europe & Africa">
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Paris (CET/CEST)</option>
+                    <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                    <option value="Europe/Lagos">Lagos (WAT)</option>
+                    <option value="Africa/Nairobi">Nairobi (EAT)</option>
+                    <option value="Africa/Johannesburg">Johannesburg (SAST)</option>
+                    <option value="Africa/Cairo">Cairo (EET)</option>
+                  </optgroup>
+                  <optgroup label="Asia & Pacific">
+                    <option value="Asia/Dubai">Dubai (GST)</option>
+                    <option value="Asia/Kolkata">India (IST)</option>
+                    <option value="Asia/Singapore">Singapore (SGT)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                    <option value="Australia/Sydney">Sydney (AEST)</option>
+                  </optgroup>
                 </select>
               </div>
               <div className="pt-4">
@@ -255,7 +274,7 @@ export default function OnboardingPage() {
                     </div>
                     <Input
                       id={`svc-price-${i}`}
-                      label="Price (₦)"
+                      label="Price"
                       type="number"
                       placeholder="0"
                       value={service.price}

@@ -45,7 +45,7 @@ function WidgetContent() {
 
   useEffect(() => {
     if (!orgId) return;
-    fetch(`/api/services?orgId=${orgId}`)
+    fetch(`/api/widget/services?orgId=${orgId}`)
       .then((r) => r.json())
       .then((data) => setServices(data.services || []))
       .catch(() => {});
@@ -94,7 +94,9 @@ function WidgetContent() {
         body: JSON.stringify({
           organizationId: orgId,
           serviceId: selectedService.id,
-          customerId: "temp",
+          customerName: name,
+          customerEmail: email || undefined,
+          customerPhone: phone,
           startsAt: selectedSlot.startsAt,
           channel: "web",
         }),
@@ -323,7 +325,7 @@ function WidgetContent() {
               id="phone"
               label="Phone Number"
               type="tel"
-              placeholder="+234 xxx xxx xxxx"
+              placeholder="+1 (555) 123-4567"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required

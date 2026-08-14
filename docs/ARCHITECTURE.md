@@ -28,8 +28,8 @@
 │  availability.service.ts  │  booking.service.ts                 │
 │  service.service.ts       │  staff.service.ts                   │
 │  customer.service.ts      │  payment.service.ts                 │
-│                                                                      │
-│  Rules:                                                           │
+│                                                                 │
+│  Rules:                                                          │
 │  - Route handlers are thin controllers                           │
 │  - All business logic lives in service functions                 │
 │  - Services call data access layer, never route handlers         │
@@ -71,12 +71,12 @@ Organization (tenant)
 
 ### Tenant Resolution by Channel
 
-| Channel | How orgId is resolved |
-|---------|----------------------|
-| Dashboard (owner/staff) | From Auth0 JWT `org_id` claim |
-| Booking Widget | Passed as `orgId` URL param in embed script |
-| SMS | Phone number → organization mapping (TODO) |
-| Voice | Phone number → organization mapping (TODO) |
+| Channel                 | How orgId is resolved                       |
+| ----------------------- | ------------------------------------------- |
+| Dashboard (owner/staff) | From OAuth JWT `org_id` claim               |
+| Booking Widget          | Passed as `orgId` URL param in embed script |
+| SMS                     | Phone number → organization mapping (TODO)  |
+| Voice                   | Phone number → organization mapping (TODO)  |
 
 ---
 
@@ -235,10 +235,10 @@ GET /api/availability?orgId=X&serviceId=Y&date=2025-01-15
 
 ## Background Jobs (Inngest)
 
-| Job | Trigger | Purpose |
-|-----|---------|---------|
-| `send-reminder` | `booking.created` event | Sends SMS/email reminder 24h before appointment |
-| `handle-no-shows` | `cron/15min` | Marks bookings as no-show after threshold |
+| Job               | Trigger                 | Purpose                                         |
+| ----------------- | ----------------------- | ----------------------------------------------- |
+| `send-reminder`   | `booking.created` event | Sends SMS/email reminder 24h before appointment |
+| `handle-no-shows` | `cron/15min`            | Marks bookings as no-show after threshold       |
 
 ---
 

@@ -18,7 +18,7 @@ export const services = pgTable("services", {
   description: text("description"),
   durationMinutes: integer("duration_minutes").notNull(),
   priceCents: integer("price_cents").notNull().default(0),
-  currency: varchar("currency", { length: 3 }).notNull().default("NGN"),
+  currency: varchar("currency", { length: 3 }).notNull().default("USD"),
   bufferMinutes: integer("buffer_minutes").notNull().default(0),
   depositRequired: boolean("deposit_required").notNull().default(false),
   depositAmountCents: integer("deposit_amount_cents").notNull().default(0),

@@ -249,6 +249,7 @@ export async function getBookingByManageToken(token: string) {
   const [booking] = await db
     .select({
       id: bookings.id,
+      organizationId: bookings.organizationId,
       startsAt: bookings.startsAt,
       endsAt: bookings.endsAt,
       status: bookings.status,

@@ -13,7 +13,7 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 const plans = [
   {
     name: "Free",
-    price: "₦0",
+    price: "$0",
     period: "/month",
     features: [
       "50 bookings/month",
@@ -25,7 +25,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "₦15,000",
+    price: "$29",
     period: "/month",
     features: [
       "Unlimited bookings",

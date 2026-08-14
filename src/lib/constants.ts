@@ -146,8 +146,6 @@ export const PLAN_LIMITS = {
 } as const;
 
 // ─── Business Defaults ───────────────────────────────────────
-export const DEFAULT_TIMEZONE = "Africa/Lagos";
-export const DEFAULT_CURRENCY = "NGN";
 export const DEFAULT_BUFFER_MINUTES = 10;
 export const DEFAULT_SLOT_INCREMENT_MINUTES = 30;
 export const CANCELLATION_WINDOW_HOURS = 2;

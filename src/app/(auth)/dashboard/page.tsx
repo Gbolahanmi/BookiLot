@@ -33,7 +33,7 @@ export default function DashboardPage() {
             : [
                 { label: "Today's Bookings", value: stats?.todayBookings ?? 0 },
                 { label: "This Week", value: stats?.weekBookings ?? 0 },
-                { label: "Revenue (Month)", value: `₦${(stats?.monthRevenue ?? 0).toLocaleString()}` },
+                { label: "Revenue (Month)", value: `$${(stats?.monthRevenue ?? 0).toLocaleString()}` },
                 { label: "No-Show Rate", value: `${stats?.noShowRate ?? 0}%` },
               ].map((stat) => (
                 <div

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { staffMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { requireOwner } from "@/lib/auth/tenant";
 
 const updateStaffSchema = z.object({
   displayName: z.string().min(1).max(255).optional(),
@@ -18,6 +19,15 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await requireOwner();
+
+  if (!user.organizationId) {
+    return NextResponse.json(
+      { error: "No organization linked to this account" },
+      { status: 400 }
+    );
+  }
+
   const { id } = await params;
   const body = await request.json();
 
@@ -32,7 +42,12 @@ export async function PATCH(
   const [updated] = await db
     .update(staffMembers)
     .set({ ...parsed.data, updatedAt: new Date() })
-    .where(eq(staffMembers.id, id))
+    .where(
+      and(
+        eq(staffMembers.id, id),
+        eq(staffMembers.organizationId, user.organizationId)
+      )
+    )
     .returning();
 
   if (!updated) {
@@ -46,15 +61,29 @@ export async function PATCH(
  * DELETE /api/staff/[id] — soft delete
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await requireOwner();
+
+  if (!user.organizationId) {
+    return NextResponse.json(
+      { error: "No organization linked to this account" },
+      { status: 400 }
+    );
+  }
+
   const { id } = await params;
 
   const [updated] = await db
     .update(staffMembers)
     .set({ active: false, updatedAt: new Date() })
-    .where(eq(staffMembers.id, id))
+    .where(
+      and(
+        eq(staffMembers.id, id),
+        eq(staffMembers.organizationId, user.organizationId)
+      )
+    )
     .returning();
 
   if (!updated) {
