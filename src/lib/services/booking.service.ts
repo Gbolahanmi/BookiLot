@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bookings, customers, services, staffMembers } from "@/lib/db/schema";
-import { eq, and, gte, lte, ne } from "drizzle-orm";
+import { eq, and, gte, lte, ne, sql } from "drizzle-orm";
 import { generateToken } from "@/lib/utils";
 import {
   BOOKING_STATUS,
@@ -234,7 +234,7 @@ export async function markNoShow(
   await db
     .update(customers)
     .set({
-      noShowCount: customers.noShowCount,
+      noShowCount: sql`${customers.noShowCount} + 1`,
       updatedAt: new Date(),
     })
     .where(eq(customers.id, updated.customerId));

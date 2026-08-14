@@ -1,7 +1,7 @@
 import { Inngest } from "inngest";
 import { db } from "@/lib/db";
 import { bookings, customers, services, organizations } from "@/lib/db/schema";
-import { eq, and, lte } from "drizzle-orm";
+import { eq, and, lte, sql } from "drizzle-orm";
 import { sendBookingReminder } from "@/lib/sms";
 import { sendBookingReminderEmail } from "@/lib/email";
 import { addHours, format } from "date-fns";
@@ -126,7 +126,7 @@ export const handleNoShows = inngest.createFunction(
       await db
         .update(customers)
         .set({
-          noShowCount: customers.noShowCount,
+          noShowCount: sql`${customers.noShowCount} + 1`,
           updatedAt: new Date(),
         })
         .where(eq(customers.id, booking.customerId));

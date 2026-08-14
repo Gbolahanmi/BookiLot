@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { customers } from "@/lib/db/schema";
+import { bookings, customers, services, organizations, staffMembers } from "@/lib/db/schema";
 import { createBooking } from "@/lib/services/booking.service";
 import { getSession } from "@/lib/auth/tenant";
+import { inngest } from "@/lib/jobs/inngest";
+import { sendBookingConfirmation } from "@/lib/sms";
+import { sendBookingConfirmationEmail } from "@/lib/email";
+import { format } from "date-fns";
 
 const createBookingSchema = z.object({
   organizationId: z.string().uuid(),
@@ -116,7 +120,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.error }, { status: 409 });
     }
 
-    return NextResponse.json({ booking: result.booking }, { status: 201 });
+    const booking = result.booking!;
+
+    // Fire-and-forget: send Inngest event for reminders + confirmations
+    inngest.send({
+      name: "booking.created",
+      data: { bookingId: booking.id },
+    }).catch(() => {});
+
+    // Fire-and-forget: send confirmation SMS + email
+    sendBookingConfirmations(booking.id, organizationId).catch(() => {});
+
+    return NextResponse.json({ booking }, { status: 201 });
   } catch (error) {
     console.error("Booking creation failed:", error);
     return NextResponse.json(
@@ -142,8 +157,6 @@ export async function GET() {
     );
   }
 
-  const { bookings, services, staffMembers, customers: custs } = await import("@/lib/db/schema");
-
   const result = await db
     .select({
       id: bookings.id,
@@ -155,15 +168,71 @@ export async function GET() {
       createdAt: bookings.createdAt,
       serviceName: services.name,
       staffName: staffMembers.displayName,
-      customerName: custs.name,
-      customerEmail: custs.email,
-      customerPhone: custs.phone,
+      customerName: customers.name,
+      customerEmail: customers.email,
+      customerPhone: customers.phone,
     })
     .from(bookings)
     .innerJoin(services, eq(bookings.serviceId, services.id))
     .leftJoin(staffMembers, eq(bookings.staffMemberId, staffMembers.id))
-    .innerJoin(custs, eq(bookings.customerId, custs.id))
+    .innerJoin(customers, eq(bookings.customerId, customers.id))
     .where(eq(bookings.organizationId, session.user.organizationId));
 
   return NextResponse.json({ bookings: result });
+}
+
+/**
+ * Send confirmation SMS + email after booking creation.
+ * Runs async — errors are logged but don't block the response.
+ */
+async function sendBookingConfirmations(bookingId: string, organizationId: string) {
+  const [booking] = await db
+    .select({
+      id: bookings.id,
+      startsAt: bookings.startsAt,
+      manageToken: bookings.manageToken,
+      customerName: customers.name,
+      customerEmail: customers.email,
+      customerPhone: customers.phone,
+      serviceName: services.name,
+      serviceDuration: services.durationMinutes,
+      orgName: organizations.name,
+    })
+    .from(bookings)
+    .innerJoin(customers, eq(bookings.customerId, customers.id))
+    .innerJoin(services, eq(bookings.serviceId, services.id))
+    .innerJoin(organizations, eq(bookings.organizationId, organizations.id))
+    .where(eq(bookings.id, bookingId))
+    .limit(1);
+
+  if (!booking) return;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const manageUrl = `${appUrl}/bookings/manage/${booking.manageToken}`;
+  const dateStr = format(booking.startsAt, "MMM d, yyyy");
+  const timeStr = format(booking.startsAt, "h:mm a");
+
+  // Send SMS
+  if (booking.customerPhone) {
+    await sendBookingConfirmation(booking.customerPhone, {
+      businessName: booking.orgName,
+      serviceName: booking.serviceName,
+      date: dateStr,
+      time: timeStr,
+      manageUrl,
+    });
+  }
+
+  // Send email
+  if (booking.customerEmail) {
+    await sendBookingConfirmationEmail(booking.customerEmail, {
+      customerName: booking.customerName,
+      businessName: booking.orgName,
+      serviceName: booking.serviceName,
+      date: dateStr,
+      time: timeStr,
+      duration: `${booking.serviceDuration} min`,
+      manageUrl,
+    });
+  }
 }
