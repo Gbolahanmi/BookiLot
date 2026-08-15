@@ -5,13 +5,60 @@ import useSWR from "swr";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { toast } from "@/components/ui/toast";
 import { STATUS_COLORS } from "@/lib/constants";
+
+interface Booking {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  channel: string;
+  notes: string | null;
+  serviceName: string;
+  staffName: string | null;
+  customerName: string;
+  customerEmail: string | null;
+  customerPhone: string | null;
+}
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatTime(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
 export default function BookingsPage() {
   const [view, setView] = useState<"list" | "calendar">("list");
-  const { data: bookings, error, isLoading } = useSWR("/api/bookings", fetcher);
+  const { data, error, isLoading, mutate } = useSWR("/api/bookings", fetcher);
+  const bookings: Booking[] = data?.bookings ?? [];
+
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  async function handleCancel(id: string) {
+    if (!confirm("Cancel this booking?")) return;
+    setCancelling(id);
+    try {
+      const res = await fetch(`/api/bookings/${id}/cancel`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json();
+        toast(err.error || "Failed to cancel booking", "error");
+        return;
+      }
+      toast("Booking cancelled", "success");
+      mutate();
+    } catch {
+      toast("Something went wrong", "error");
+    } finally {
+      setCancelling(null);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -55,7 +102,7 @@ export default function BookingsPage() {
             </div>
           ) : error ? (
             <p className="py-12 text-center text-sm text-red-600">Failed to load bookings.</p>
-          ) : bookings?.length === 0 ? (
+          ) : bookings.length === 0 ? (
             <EmptyState
               title="No bookings yet"
               description="Bookings will appear here as customers book appointments."
@@ -67,22 +114,46 @@ export default function BookingsPage() {
                   <tr>
                     <th className="px-4 py-3 font-medium text-gray-500">Customer</th>
                     <th className="px-4 py-3 font-medium text-gray-500">Service</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Date</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Staff</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Date & Time</th>
                     <th className="px-4 py-3 font-medium text-gray-500">Status</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">Channel</th>
+                    <th className="px-4 py-3 font-medium text-gray-500"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {bookings?.map((b: { id: string; customerName: string; service: string; date: string; status: string }) => {
+                  {bookings.map((b) => {
                     const colors = STATUS_COLORS[b.status] || STATUS_COLORS.pending;
                     return (
                       <tr key={b.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{b.customerName}</td>
-                        <td className="px-4 py-3 text-gray-600">{b.service}</td>
-                        <td className="px-4 py-3 text-gray-600">{b.date}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-gray-900">{b.customerName}</p>
+                          {b.customerEmail && (
+                            <p className="text-xs text-gray-500">{b.customerEmail}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">{b.serviceName}</td>
+                        <td className="px-4 py-3 text-gray-600">{b.staffName || "—"}</td>
+                        <td className="px-4 py-3">
+                          <p className="text-gray-900">{formatDate(b.startsAt)}</p>
+                          <p className="text-xs text-gray-500">{formatTime(b.startsAt)}</p>
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${colors.bg} ${colors.text}`}>
                             {b.status}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 capitalize">{b.channel}</td>
+                        <td className="px-4 py-3">
+                          {b.status === "confirmed" && (
+                            <button
+                              onClick={() => handleCancel(b.id)}
+                              disabled={cancelling === b.id}
+                              className="text-xs text-red-600 hover:text-red-500 disabled:opacity-50"
+                            >
+                              {cancelling === b.id ? "Cancelling..." : "Cancel"}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
