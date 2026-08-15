@@ -70,6 +70,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .update(users)
             .set({ status: "email_verified" })
             .where(eq(users.email, email));
+          // Assign DB UUID so jwt callback can look up the user
+          user.id = existing.id;
         } else {
           // New user — create account
           const [created] = await db
