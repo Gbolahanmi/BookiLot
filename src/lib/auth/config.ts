@@ -30,11 +30,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .where(eq(users.email, email))
           .limit(1);
 
-        if (!user || !user.passwordHash) return null;
+        // User exists but has no password (Google-only account)
+        if (user && !user.passwordHash) return null;
+
+        // User doesn't exist at all
+        if (!user) return null;
 
         const valid = await bcrypt.compare(
           String(credentials.password),
-          user.passwordHash
+          user.passwordHash!
         );
 
         if (!valid) return null;

@@ -25,7 +25,7 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Invalid email or password. If you registered with Google, use the Google button above.");
       setLoading(false);
     } else {
       window.location.href = callbackUrl;
