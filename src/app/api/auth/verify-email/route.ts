@@ -49,7 +49,7 @@ export async function GET(req: Request) {
       .where(eq(users.id, payload.userId));
 
     return NextResponse.redirect(
-      new URL("/onboarding?message=email_verified", req.url)
+      new URL("/login?message=verified", req.url)
     );
   } catch (error) {
     console.error("Email verification error:", error);

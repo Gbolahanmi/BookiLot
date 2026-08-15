@@ -65,8 +65,9 @@ export default auth((req) => {
   // Logged in user — check status
   if (req.auth) {
     const status = req.auth.user?.status || "pending";
+    const orgId = req.auth.user?.organizationId;
 
-    // Pending users: only allow /verify-email and onboarding-related
+    // Pending users: only allow /verify-email
     if (status === "pending") {
       const isPendingAllowed =
         pendingOnlyRoutes.some((route) => pathname.startsWith(route)) ||
@@ -77,22 +78,33 @@ export default auth((req) => {
       }
     }
 
-    // Email-verified users: allow dashboard basics, block owner-only features
+    // Email-verified users: redirect to /onboarding if no org, block owner-only features
     if (status === "email_verified") {
-      const isBlockedForUnverified =
-        activeOnlyRoutes.some((route) => pathname.startsWith(route));
-
-      if (isBlockedForUnverified) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+      // No org yet → must complete onboarding
+      if (!orgId && pathname !== "/onboarding") {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
+      // Has org → block owner-only features (they're "active" in practice)
+      if (orgId) {
+        const isBlockedForUnverified =
+          activeOnlyRoutes.some((route) => pathname.startsWith(route));
+        if (isBlockedForUnverified) {
+          return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
       }
     }
 
-    // Verified users trying to access pending-only routes
+    // Active users: block onboarding (already completed)
+    if (status === "active" && pathname === "/onboarding") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Verified/active users trying to access pending-only routes
     if (status !== "pending") {
       const isPendingOnly =
         pendingOnlyRoutes.some((route) => pathname.startsWith(route));
 
-      if (isPendingOnly && pathname !== "/verify-email") {
+      if (isPendingOnly) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }

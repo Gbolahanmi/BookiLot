@@ -88,21 +88,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
+    async redirect({ url, baseUrl }) {
+      // After sign-in, check if user needs onboarding
+      // url is the callbackUrl the client requested
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
     async jwt({ token, user }) {
+      // On initial sign-in, copy all fields from the authorize/oauth response
       if (user) {
         token.id = user.id;
         token.role = user.role || "owner";
         token.organizationId = user.organizationId || null;
+      }
 
-        // Fetch status from DB since OAuth providers don't include it
-        const userId = user.id as string;
+      // Always fetch fresh status + orgId from DB (fixes stale JWT after onboarding)
+      const userId = (token.id || user?.id) as string;
+      if (userId) {
         const [dbUser] = await db
-          .select({ status: users.status })
+          .select({ status: users.status, organizationId: users.organizationId })
           .from(users)
           .where(eq(users.id, userId))
           .limit(1);
-        token.status = dbUser?.status || "pending";
+        if (dbUser) {
+          token.status = dbUser.status;
+          token.organizationId = dbUser.organizationId;
+        }
       }
+
       return token;
     },
     async session({ session, token }) {

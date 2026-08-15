@@ -8,6 +8,7 @@ import { Suspense } from "react";
 function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const message = searchParams.get("message");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +34,7 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl });
+    signIn("google", { callbackUrl: "/onboarding" });
   };
 
   return (
@@ -45,6 +46,12 @@ function LoginForm() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+          {message === "verified" && (
+            <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              Email verified successfully! Please sign in.
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
               {error}
