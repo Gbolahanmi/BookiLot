@@ -73,6 +73,22 @@
 - **Effort:** 5 min
 - **Status:** `[ ]`
 
+### T9: Staff invitation & login flow
+- **Requirement:** ST6, ST7, ST8
+- **Files:**
+  - `src/app/api/staff/route.ts` — create user account with role: "staff"
+  - `src/lib/email/templates.ts` — add staff invitation template
+  - `src/components/layout/sidebar.tsx` — hide settings/billing for staff
+  - `src/middleware.ts` — staff role routing
+- **Change:**
+  - When owner adds staff, create a user account (status: "pending", role: "staff")
+  - Send invitation email with link to set password
+  - Staff member sets password → status: "email_verified" → can log in
+  - Staff sees limited sidebar (no settings, no billing)
+  - Staff can view bookings and customers but not modify settings
+- **Effort:** 2-3 hrs
+- **Status:** `[ ]`
+
 ---
 
 ## P1 — Should Fix Before Pilot
@@ -133,9 +149,9 @@
 | Priority | Count | Total Effort |
 |----------|-------|-------------|
 | P0 | 8 | ~2.5 hrs |
-| P1 | 3 | ~4.5 hrs |
+| P1 | 4 | ~6.5 hrs |
 | P2 | 3 | ~5 hrs |
-| **Total** | **14** | **~12 hrs** |
+| **Total** | **15** | **~14 hrs** |
 
 ---
 

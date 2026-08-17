@@ -58,6 +58,9 @@
 | ST3 | Owner can edit a staff member | ❌ Edit button exists, no modal |
 | ST4 | Owner can delete a staff member | ❌ API exists, no UI |
 | ST5 | Staff email is saved | ❌ Silently dropped by API |
+| ST6 | Staff member can sign in with their own credentials | ❌ No user account created |
+| ST7 | Staff sees limited nav (no settings/billing) | ❌ Not implemented |
+| ST8 | Staff role is assigned on sign-in | ❌ No invitation flow |
 
 ### Customer Management
 
