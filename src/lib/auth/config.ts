@@ -4,7 +4,7 @@ import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -65,11 +65,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .limit(1);
 
         if (existing) {
-          // Existing user — mark email as verified
+          // Only mark as verified if they're still pending — don't overwrite active status
           await db
             .update(users)
             .set({ status: "email_verified" })
-            .where(eq(users.email, email));
+            .where(and(eq(users.email, email), eq(users.status, "pending")));
           // Assign DB UUID so jwt callback can look up the user
           user.id = existing.id;
         } else {
