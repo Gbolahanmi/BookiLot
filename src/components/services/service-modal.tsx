@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/ToastContext";
 
 interface Service {
   id: string;
@@ -37,6 +37,7 @@ const DURATION_OPTIONS = [
 ];
 
 export function ServiceModal({ open, onClose, service, onSaved }: ServiceModalProps) {
+  const { addToast } = useToast();
   const isEdit = !!service;
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -66,7 +67,7 @@ export function ServiceModal({ open, onClose, service, onSaved }: ServiceModalPr
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      toast("Service name is required", "error");
+      addToast({ type: "error", title: "Service name is required" });
       return;
     }
 
@@ -91,15 +92,15 @@ export function ServiceModal({ open, onClose, service, onSaved }: ServiceModalPr
 
       if (!res.ok) {
         const data = await res.json();
-        toast(data.error || "Failed to save service", "error");
+        addToast({ type: "error", title: data.error || "Failed to save service" });
         return;
       }
 
-      toast(isEdit ? "Service updated" : "Service created", "success");
+      addToast({ type: "success", title: isEdit ? "Service updated" : "Service created" });
       onSaved();
       onClose();
     } catch {
-      toast("Something went wrong", "error");
+      addToast({ type: "error", title: "Something went wrong" });
     } finally {
       setLoading(false);
     }
@@ -114,14 +115,14 @@ export function ServiceModal({ open, onClose, service, onSaved }: ServiceModalPr
       const res = await fetch(`/api/services/${service.id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        toast(data.error || "Failed to delete service", "error");
+        addToast({ type: "error", title: data.error || "Failed to delete service" });
         return;
       }
-      toast("Service deleted", "success");
+      addToast({ type: "success", title: "Service deleted" });
       onSaved();
       onClose();
     } catch {
-      toast("Something went wrong", "error");
+      addToast({ type: "error", title: "Something went wrong" });
     } finally {
       setLoading(false);
     }

@@ -103,7 +103,7 @@ export async function createBooking(
       customerId,
       startsAt,
       endsAt,
-      status: BOOKING_STATUS.PENDING,
+      status: BOOKING_STATUS.CONFIRMED,
       channel,
       idempotencyKey: idempotencyKey || null,
       notes,
@@ -151,12 +151,12 @@ export async function cancelBooking(
     return { success: false, error: "Booking cannot be cancelled" };
   }
 
-  // 2. Check cancellation window
+  // 2. Check cancellation window (must cancel at least 2h before appointment)
   const cancellationDeadline = addHours(
     booking.startsAt,
     -CANCELLATION_WINDOW_HOURS
   );
-  if (isBefore(new Date(), cancellationDeadline)) {
+  if (isBefore(cancellationDeadline, new Date())) {
     return {
       success: false,
       error: `Cannot cancel within ${CANCELLATION_WINDOW_HOURS} hours of appointment`,

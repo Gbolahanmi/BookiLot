@@ -40,7 +40,6 @@ function WidgetContent() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [bookingComplete, setBookingComplete] = useState(false);
   const [manageUrl, setManageUrl] = useState("");
 
   useEffect(() => {
@@ -110,7 +109,6 @@ function WidgetContent() {
       }
 
       setManageUrl(`/bookings/manage/${data.booking.manageToken}`);
-      setBookingComplete(true);
       setStep("confirm");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -161,7 +159,7 @@ function WidgetContent() {
     <div className="min-h-screen bg-white">
       <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
         <h1 className="text-lg font-semibold text-gray-900">
-          {bookingComplete ? "Booking Confirmed" : "Book an Appointment"}
+          {step === "confirm" ? "Booking Confirmed" : "Book an Appointment"}
         </h1>
       </div>
 
@@ -349,7 +347,7 @@ function WidgetContent() {
           </div>
         )}
 
-        {step === "confirm" && bookingComplete && (
+        {step === "confirm" && (
           <div className="space-y-4 py-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <svg
@@ -383,7 +381,10 @@ function WidgetContent() {
               </p>
             </div>
             <p className="text-xs text-gray-400">
-              Manage your booking: {manageUrl}
+              Manage your booking:{" "}
+              <a href={manageUrl} className="text-indigo-600 hover:text-indigo-500 underline">
+                {manageUrl}
+              </a>
             </p>
           </div>
         )}

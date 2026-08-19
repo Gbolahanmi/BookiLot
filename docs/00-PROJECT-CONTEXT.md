@@ -17,13 +17,13 @@ Existing tools (Calendly, Fresha) either focus on enterprise or don't work well 
 
 ## Who It's For
 
-| User | What They Need |
-|------|---------------|
-| **Business Owner** | Fill their calendar, reduce no-shows, understand their business |
-| **Business Staff** | See their own schedule, manage their bookings |
-| **Customer (guest)** | Book quickly, no account required |
-| **Customer (registered)** | Saved history, returning visits |
-| **Platform Admin** | Manage tenants, support, billing |
+| User                      | What They Need                                                  |
+| ------------------------- | --------------------------------------------------------------- |
+| **Business Owner**        | Fill their calendar, reduce no-shows, understand their business |
+| **Business Staff**        | See their own schedule, manage their bookings                   |
+| **Customer (guest)**      | Book quickly, no account required                               |
+| **Customer (registered)** | Saved history, returning visits                                 |
+| **Platform Admin**        | Manage tenants, support, billing                                |
 
 ## How It Works
 
@@ -36,22 +36,14 @@ Existing tools (Calendly, Fresha) either focus on enterprise or don't work well 
 
 ## Tech Stack
 
-| Layer | Tool |
-|-------|------|
+| Layer    | Tool                                     |
+| -------- | ---------------------------------------- |
 | Frontend | Next.js 15 (App Router), Tailwind CSS v4 |
-| Backend | Next.js API Routes, Drizzle ORM |
-| Database | PostgreSQL (Neon) |
-| Auth | AuthJS v5 (Google + Credentials) |
-| Jobs | Inngest (reminders, no-show detection) |
-| Payments | Paystack |
-| SMS | Twilio |
-| Email | Nodemailer (SMTP) |
-| Hosting | Vercel |
-
-## Key Decisions
-
-1. **Widget-first** — Launch with embeddable widget, marketplace later
-2. **Nigeria-first** — Paystack primary, but code is globalized (USD/UTC defaults)
-3. **Solo dev** — Single Next.js app, no monorepo
-4. **Drizzle over Prisma** — Lighter, closer to SQL
-5. **Same booking logic for all channels** — Web, SMS, voice all call the same service functions
+| Backend  | Next.js API Routes, Drizzle ORM          |
+| Database | PostgreSQL (Neon)                        |
+| Auth     | AuthJS v5 (Google + Credentials)         |
+| Jobs     | Inngest (reminders, no-show detection)   |
+| Payments | Paystack                                 |
+| SMS      | Twilio                                   |
+| Email    | Nodemailer (SMTP)                        |
+| Hosting  | Vercel                                   |

@@ -1,4 +1,4 @@
-import { REMINDER_HOURS_BEFORE, OTP_LENGTH, OTP_EXPIRY_MINUTES } from "@/lib/constants";
+import { REMINDER_HOURS_BEFORE } from "@/lib/constants";
 
 const TWILIO_BASE = "https://api.twilio.com/2010-04-01";
 const accountSid = process.env.TWILIO_ACCOUNT_SID!;
@@ -87,26 +87,4 @@ export async function sendBookingReminder(
   ].join("\n");
 
   return sendSms(phone, message);
-}
-
-/**
- * Send OTP via SMS.
- */
-export async function sendOtp(
-  phone: string,
-  otp: string
-): Promise<boolean> {
-  const message = `Your verification code is: ${otp}. Valid for ${OTP_EXPIRY_MINUTES} minutes. Do not share this code.`;
-  return sendSms(phone, message);
-}
-
-/**
- * Generate a numeric OTP.
- */
-export function generateOtp(): string {
-  let otp = "";
-  for (let i = 0; i < OTP_LENGTH; i++) {
-    otp += Math.floor(Math.random() * 10).toString();
-  }
-  return otp;
 }

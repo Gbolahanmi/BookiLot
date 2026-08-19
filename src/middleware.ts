@@ -42,6 +42,7 @@ export default auth((req) => {
     pathname === "/register" ||
     pathname === "/pricing" ||
     pathname.startsWith("/widget") ||
+    pathname.startsWith("/bookings/manage/") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/availability") ||
     pathname.startsWith("/api/bookings/manage") ||

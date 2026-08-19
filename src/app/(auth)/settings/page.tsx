@@ -6,11 +6,31 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/ToastContext";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
+interface DayHours {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  active: boolean;
+}
+
+const DAYS = [
+  { name: "Monday", dayOfWeek: 1 },
+  { name: "Tuesday", dayOfWeek: 2 },
+  { name: "Wednesday", dayOfWeek: 3 },
+  { name: "Thursday", dayOfWeek: 4 },
+  { name: "Friday", dayOfWeek: 5 },
+  { name: "Saturday", dayOfWeek: 6 },
+  { name: "Sunday", dayOfWeek: 0 },
+];
+
 export default function SettingsPage() {
+  const { addToast } = useToast();
   const { data: settings, error, isLoading } = useSWR("/api/settings", fetcher);
+  const { data: hoursData, mutate: mutateHours } = useSWR("/api/settings/hours", fetcher);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -22,6 +42,15 @@ export default function SettingsPage() {
     description: "",
     timezone: "UTC",
   });
+  const [hours, setHours] = useState<DayHours[]>([
+    { dayOfWeek: 1, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 2, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 3, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 4, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 5, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 6, startTime: "09:00", endTime: "17:00", active: true },
+    { dayOfWeek: 0, startTime: "10:00", endTime: "16:00", active: false },
+  ]);
 
   useEffect(() => {
     if (settings) {
@@ -35,6 +64,16 @@ export default function SettingsPage() {
       });
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (hoursData?.hours) {
+      const loaded: DayHours[] = DAYS.map((d) => {
+        const existing = hoursData.hours.find((h: DayHours) => h.dayOfWeek === d.dayOfWeek);
+        return existing || { dayOfWeek: d.dayOfWeek, startTime: "09:00", endTime: "17:00", active: false };
+      });
+      setHours(loaded);
+    }
+  }, [hoursData]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -53,6 +92,27 @@ export default function SettingsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveHours = async () => {
+    try {
+      const res = await fetch("/api/settings/hours", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hours }),
+      });
+      if (!res.ok) throw new Error("Failed to save hours");
+      mutateHours();
+      addToast({ type: "success", title: "Working hours saved" });
+    } catch {
+      addToast({ type: "error", title: "Failed to save working hours" });
+    }
+  };
+
+  const updateHour = (dayOfWeek: number, field: keyof DayHours, value: string | boolean) => {
+    setHours((prev) =>
+      prev.map((h) => (h.dayOfWeek === dayOfWeek ? { ...h, [field]: value } : h))
+    );
   };
 
   return (
@@ -148,42 +208,47 @@ export default function SettingsPage() {
                 Set your business hours. Customers can only book during these times.
               </p>
               <div className="space-y-3">
-                {[
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ].map((day) => (
-                  <div key={day} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-                    <span className="w-full sm:w-24 text-sm font-medium text-gray-700">
-                      {day}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        defaultValue="09:00"
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
-                      <span className="text-gray-400">to</span>
-                      <input
-                        type="time"
-                        defaultValue="17:00"
-                        className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                      />
+                {DAYS.map((day) => {
+                  const dayHours = hours.find((h) => h.dayOfWeek === day.dayOfWeek);
+                  return (
+                    <div key={day.dayOfWeek} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                      <span className="w-full sm:w-24 text-sm font-medium text-gray-700">
+                        {day.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="time"
+                          value={dayHours?.startTime || "09:00"}
+                          onChange={(e) => updateHour(day.dayOfWeek, "startTime", e.target.value)}
+                          disabled={!dayHours?.active}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+                        />
+                        <span className="text-gray-400">to</span>
+                        <input
+                          type="time"
+                          value={dayHours?.endTime || "17:00"}
+                          onChange={(e) => updateHour(day.dayOfWeek, "endTime", e.target.value)}
+                          disabled={!dayHours?.active}
+                          className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 sm:ml-auto">
+                        <input
+                          type="checkbox"
+                          checked={dayHours?.active ?? false}
+                          onChange={(e) => updateHour(day.dayOfWeek, "active", e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300"
+                        />
+                        <span className="text-sm text-gray-600">Open</span>
+                      </label>
                     </div>
-                    <label className="flex items-center gap-2 sm:ml-auto">
-                      <input
-                        type="checkbox"
-                        defaultChecked={day !== "Sunday"}
-                        className="h-4 w-4 rounded border-gray-300"
-                      />
-                      <span className="text-sm text-gray-600">Open</span>
-                    </label>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              <div className="mt-4">
+                <Button onClick={handleSaveHours} variant="outline">
+                  Save Hours
+                </Button>
               </div>
             </div>
           </>

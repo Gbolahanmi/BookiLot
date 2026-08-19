@@ -41,7 +41,7 @@ export const sendReminder = inngest.createFunction(
       .where(eq(bookings.id, bookingId))
       .limit(1);
 
-    if (!updatedBooking || updatedBooking.status !== BOOKING_STATUS.PENDING) return;
+    if (!updatedBooking || updatedBooking.status !== BOOKING_STATUS.CONFIRMED) return;
 
     // Get customer, service, org details
     const [customer] = await db

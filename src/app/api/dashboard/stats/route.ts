@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrganizationId } from "@/lib/auth/tenant";
 import { db } from "@/lib/db";
-import { bookings } from "@/lib/db/schema";
+import { bookings, services } from "@/lib/db/schema";
 import { eq, and, gte, lt, sql } from "drizzle-orm";
 
 export async function GET() {
@@ -36,10 +36,11 @@ export async function GET() {
     .from(bookings)
     .where(and(orgFilter, notDeleted, gte(bookings.startsAt, startOfWeek), lt(bookings.startsAt, endOfToday)));
 
-  // Month revenue (from completed/confirmed bookings)
+  // Month revenue (sum of service prices for confirmed/completed bookings)
   const [revenueResult] = await db
-    .select({ total: sql<number>`coalesce(sum(${bookings.depositPaid}::int), 0)::int` })
+    .select({ total: sql<number>`coalesce(sum(${services.priceCents}), 0)::int` })
     .from(bookings)
+    .innerJoin(services, eq(bookings.serviceId, services.id))
     .where(and(orgFilter, notDeleted, gte(bookings.startsAt, startOfMonth), lt(bookings.startsAt, endOfMonth)));
 
   // No-show rate (this month)

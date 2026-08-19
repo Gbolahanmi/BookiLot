@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/ToastContext";
 import { STATUS_COLORS } from "@/lib/constants";
 
 interface Booking {
@@ -35,6 +35,7 @@ function formatTime(dateStr: string) {
 }
 
 export default function BookingsPage() {
+  const { addToast } = useToast();
   const [view, setView] = useState<"list" | "calendar">("list");
   const { data, error, isLoading, mutate } = useSWR("/api/bookings", fetcher);
   const bookings: Booking[] = data?.bookings ?? [];
@@ -48,13 +49,13 @@ export default function BookingsPage() {
       const res = await fetch(`/api/bookings/${id}/cancel`, { method: "POST" });
       if (!res.ok) {
         const err = await res.json();
-        toast(err.error || "Failed to cancel booking", "error");
+        addToast({ type: "error", title: err.error || "Failed to cancel booking" });
         return;
       }
-      toast("Booking cancelled", "success");
+      addToast({ type: "success", title: "Booking cancelled" });
       mutate();
     } catch {
-      toast("Something went wrong", "error");
+      addToast({ type: "error", title: "Something went wrong" });
     } finally {
       setCancelling(null);
     }

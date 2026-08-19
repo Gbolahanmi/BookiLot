@@ -7,6 +7,7 @@ import { requireOwner, requireStaff } from "@/lib/auth/tenant";
 
 const createStaffSchema = z.object({
   displayName: z.string().min(1).max(255),
+  email: z.string().email().optional(),
   bio: z.string().optional(),
   avatarUrl: z.string().url().optional(),
 });

@@ -9,6 +9,7 @@ export const staffMembers = pgTable("staff_members", {
     .references(() => organizations.id),
   userId: uuid("user_id").references(() => users.id),
   displayName: varchar("display_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
   active: boolean("active").notNull().default(true),

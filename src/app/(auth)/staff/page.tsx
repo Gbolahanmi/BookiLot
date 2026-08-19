@@ -7,8 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useToast } from "@/components/ui/ToastContext";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
+
+interface StaffMember {
+  id: string;
+  displayName: string;
+  email?: string;
+  bio?: string;
+}
 
 interface StaffForm {
   displayName: string;
@@ -17,8 +25,10 @@ interface StaffForm {
 }
 
 export default function StaffPage() {
+  const { addToast } = useToast();
   const { data: staff, error, isLoading, mutate } = useSWR("/api/staff", fetcher);
   const [showForm, setShowForm] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [form, setForm] = useState<StaffForm>({
     displayName: "",
     bio: "",
@@ -33,25 +43,57 @@ export default function StaffPage() {
     setSubmitError("");
 
     try {
-      const res = await fetch("/api/staff", {
-        method: "POST",
+      const url = editingStaff ? `/api/staff/${editingStaff.id}` : "/api/staff";
+      const method = editingStaff ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to add staff member");
+        throw new Error(data.error || "Failed to save staff member");
       }
 
       mutate();
       setForm({ displayName: "", bio: "", email: "" });
+      setEditingStaff(null);
       setShowForm(false);
+      addToast({ type: "success", title: editingStaff ? "Staff member updated" : "Staff member added" });
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (member: StaffMember) => {
+    setEditingStaff(member);
+    setForm({
+      displayName: member.displayName,
+      bio: member.bio || "",
+      email: member.email || "",
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Remove this staff member?")) return;
+    try {
+      const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to remove staff member");
+      mutate();
+      addToast({ type: "success", title: "Staff member removed" });
+    } catch {
+      addToast({ type: "error", title: "Failed to remove staff member" });
+    }
+  };
+
+  const handleCancel = () => {
+    setForm({ displayName: "", bio: "", email: "" });
+    setEditingStaff(null);
+    setShowForm(false);
   };
 
   return (
@@ -71,7 +113,7 @@ export default function StaffPage() {
         {showForm && (
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              New Staff Member
+              {editingStaff ? "Edit Staff Member" : "New Staff Member"}
             </h2>
             {submitError && (
               <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -106,9 +148,9 @@ export default function StaffPage() {
               />
               <div className="flex gap-3">
                 <Button onClick={handleSubmit} disabled={loading}>
-                  {loading ? "Adding..." : "Add Staff"}
+                  {loading ? "Saving..." : editingStaff ? "Save Changes" : "Add Staff"}
                 </Button>
-                <Button variant="ghost" onClick={() => setShowForm(false)}>
+                <Button variant="ghost" onClick={handleCancel}>
                   Cancel
                 </Button>
               </div>
@@ -135,7 +177,7 @@ export default function StaffPage() {
             />
           ) : (
             <div className="divide-y divide-gray-200">
-              {staff?.map((member: { id: string; displayName: string; email?: string; bio?: string }) => (
+              {staff?.map((member: StaffMember) => (
                 <div
                   key={member.id}
                   className="flex items-center justify-between p-4"
@@ -151,9 +193,14 @@ export default function StaffPage() {
                       <p className="text-xs text-gray-400 mt-1">{member.bio}</p>
                     )}
                   </div>
-                  <Button variant="ghost" size="sm">
-                    Edit
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(member)}>
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(member.id)} className="text-red-600 hover:text-red-500">
+                      Delete
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
