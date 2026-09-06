@@ -105,17 +105,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationId = user.organizationId || null;
       }
 
-      // Always fetch fresh status + orgId from DB (fixes stale JWT after onboarding)
+      // Only fetch fresh status from DB on initial sign-in or if status is missing
+      // (avoids a DB query on every single request which causes session instability)
       const userId = (token.id || user?.id) as string;
-      if (userId) {
-        const [dbUser] = await db
-          .select({ status: users.status, organizationId: users.organizationId })
-          .from(users)
-          .where(eq(users.id, userId))
-          .limit(1);
-        if (dbUser) {
-          token.status = dbUser.status;
-          token.organizationId = dbUser.organizationId;
+      if (userId && (!token.status || user)) {
+        try {
+          const [dbUser] = await db
+            .select({ status: users.status, organizationId: users.organizationId })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+          if (dbUser) {
+            token.status = dbUser.status;
+            token.organizationId = dbUser.organizationId;
+          }
+        } catch {
+          // If DB query fails, keep existing token values — don't invalidate session
         }
       }
 
@@ -133,7 +138,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

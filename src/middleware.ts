@@ -43,9 +43,11 @@ export default auth((req) => {
     pathname === "/pricing" ||
     pathname.startsWith("/widget") ||
     pathname.startsWith("/bookings/manage/") ||
+    pathname.startsWith("/staff/accept") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/availability") ||
     pathname.startsWith("/api/bookings/manage") ||
+    pathname.startsWith("/api/staff/accept") ||
     pathname.startsWith("/api/webhooks");
 
   if (isPublicRoute) {

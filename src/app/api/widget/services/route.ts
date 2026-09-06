@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { services } from "@/lib/db/schema";
+import { services, organizations } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
 const querySchema = z.object({
@@ -35,5 +35,14 @@ export async function GET(request: NextRequest) {
       )
     );
 
-  return NextResponse.json({ services: result });
+  const [org] = await db
+    .select({ timezone: organizations.timezone })
+    .from(organizations)
+    .where(eq(organizations.id, parsed.data.orgId))
+    .limit(1);
+
+  return NextResponse.json({
+    services: result,
+    timezone: org?.timezone || "UTC",
+  });
 }

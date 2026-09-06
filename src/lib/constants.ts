@@ -7,7 +7,8 @@ export const BOOKING_STATUS = {
   NO_SHOW: "no_show",
 } as const;
 
-export type BookingStatus = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
+export type BookingStatus =
+  (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
 
 // ─── Booking Channels ────────────────────────────────────────
 export const BOOKING_CHANNEL = {
@@ -16,7 +17,8 @@ export const BOOKING_CHANNEL = {
   VOICE: "voice",
 } as const;
 
-export type BookingChannel = (typeof BOOKING_CHANNEL)[keyof typeof BOOKING_CHANNEL];
+export type BookingChannel =
+  (typeof BOOKING_CHANNEL)[keyof typeof BOOKING_CHANNEL];
 
 // ─── User Roles ──────────────────────────────────────────────
 export const USER_ROLE = {
@@ -34,7 +36,8 @@ export const ACCOUNT_STATUS = {
   ACTIVE: "active",
 } as const;
 
-export type AccountStatus = (typeof ACCOUNT_STATUS)[keyof typeof ACCOUNT_STATUS];
+export type AccountStatus =
+  (typeof ACCOUNT_STATUS)[keyof typeof ACCOUNT_STATUS];
 
 // ─── Subscription Plans ──────────────────────────────────────
 export const SUBSCRIPTION_PLAN = {
@@ -43,7 +46,8 @@ export const SUBSCRIPTION_PLAN = {
   ENTERPRISE: "enterprise",
 } as const;
 
-export type SubscriptionPlan = (typeof SUBSCRIPTION_PLAN)[keyof typeof SUBSCRIPTION_PLAN];
+export type SubscriptionPlan =
+  (typeof SUBSCRIPTION_PLAN)[keyof typeof SUBSCRIPTION_PLAN];
 
 // ─── Subscription Status ─────────────────────────────────────
 export const SUBSCRIPTION_STATUS = {
@@ -62,7 +66,8 @@ export const PAYMENT_PROVIDER = {
   STRIPE: "stripe",
 } as const;
 
-export type PaymentProvider = (typeof PAYMENT_PROVIDER)[keyof typeof PAYMENT_PROVIDER];
+export type PaymentProvider =
+  (typeof PAYMENT_PROVIDER)[keyof typeof PAYMENT_PROVIDER];
 
 // ─── Payment Status ──────────────────────────────────────────
 export const PAYMENT_STATUS = {
@@ -72,7 +77,8 @@ export const PAYMENT_STATUS = {
   REFUNDED: "refunded",
 } as const;
 
-export type PaymentStatus = (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
+export type PaymentStatus =
+  (typeof PAYMENT_STATUS)[keyof typeof PAYMENT_STATUS];
 
 // ─── Days of Week ────────────────────────────────────────────
 export const DAYS_OF_WEEK = {
@@ -185,9 +191,24 @@ export const NAV_ITEMS = {
   settings: { label: "Settings", href: "/settings" },
 } as const;
 
+// ─── Staff Navigation Labels ─────────────────────────────────
+export const STAFF_NAV_ITEMS = {
+  dashboard: { label: "Dashboard", href: "/staff/dashboard" },
+  bookings: { label: "My Bookings", href: "/staff/bookings" },
+  hours: { label: "My Hours", href: "/staff/hours" },
+  profile: { label: "Profile", href: "/staff/profile" },
+} as const;
+
 // ─── Status Colors (for UI) ──────────────────────────────────
-export const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  pending: { bg: "bg-yellow-50", text: "text-yellow-700", dot: "bg-yellow-500" },
+export const STATUS_COLORS: Record<
+  string,
+  { bg: string; text: string; dot: string }
+> = {
+  pending: {
+    bg: "bg-yellow-50",
+    text: "text-yellow-700",
+    dot: "bg-yellow-500",
+  },
   confirmed: { bg: "bg-green-50", text: "text-green-700", dot: "bg-green-500" },
   cancelled: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
   completed: { bg: "bg-blue-50", text: "text-blue-700", dot: "bg-blue-500" },

@@ -12,6 +12,8 @@ export const staffMembers = pgTable("staff_members", {
   email: varchar("email", { length: 255 }),
   bio: text("bio"),
   avatarUrl: text("avatar_url"),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  canEditHours: boolean("can_edit_hours").notNull().default(false),
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

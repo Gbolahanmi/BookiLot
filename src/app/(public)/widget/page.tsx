@@ -36,6 +36,7 @@ function WidgetContent() {
   const [recommendedSlots, setRecommendedSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [orgTimezone, setOrgTimezone] = useState("UTC");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,7 +47,10 @@ function WidgetContent() {
     if (!orgId) return;
     fetch(`/api/widget/services?orgId=${orgId}`)
       .then((r) => r.json())
-      .then((data) => setServices(data.services || []))
+      .then((data) => {
+        setServices(data.services || []);
+        if (data.timezone) setOrgTimezone(data.timezone);
+      })
       .catch(() => {});
   }, [orgId]);
 
@@ -118,7 +122,7 @@ function WidgetContent() {
   };
 
   const formatPrice = (cents: number, currency: string) => {
-    return new Intl.NumberFormat("en-NG", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
       minimumFractionDigits: 0,
@@ -126,19 +130,21 @@ function WidgetContent() {
   };
 
   const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    });
+      timeZone: orgTimezone,
+    }).format(new Date(iso));
   };
 
   const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    });
+      timeZone: orgTimezone,
+    }).format(new Date(iso));
   };
 
   if (!orgId) {

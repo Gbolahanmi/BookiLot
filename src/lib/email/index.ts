@@ -4,6 +4,7 @@ import {
   passwordResetTemplate,
   bookingConfirmationTemplate,
   bookingReminderTemplate,
+  staffInviteTemplate,
 } from "./templates";
 
 // ─── Transporter (lazy singleton) ─────────────────────────
@@ -100,5 +101,18 @@ export async function sendBookingReminderEmail(
   }
 ): Promise<boolean> {
   const template = bookingReminderTemplate(params);
+  return sendEmail({ to, ...template });
+}
+
+export async function sendStaffInviteEmail(
+  to: string,
+  params: {
+    staffName: string;
+    ownerName: string;
+    businessName: string;
+    inviteUrl: string;
+  }
+): Promise<boolean> {
+  const template = staffInviteTemplate(params);
   return sendEmail({ to, ...template });
 }

@@ -167,3 +167,34 @@ export function bookingReminderTemplate(params: {
     `),
   };
 }
+
+// ─── Staff Invite Email ───────────────────────────────────
+export function staffInviteTemplate(params: {
+  staffName: string;
+  ownerName: string;
+  businessName: string;
+  inviteUrl: string;
+}): EmailTemplate {
+  return {
+    subject: `You've been invited to join ${params.businessName} on Bookilot`,
+    html: baseLayout(`
+      <h2 style="margin: 0 0 16px; font-size: 24px; color: #111827;">You're Invited!</h2>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">Hi ${params.staffName},</p>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">
+        <strong>${params.ownerName}</strong> has invited you to join <strong>${params.businessName}</strong> as a staff member on Bookilot.
+      </p>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">
+        Once you accept, you'll be able to:
+      </p>
+      <ul style="margin: 0 0 16px; padding-left: 20px; font-size: 16px; color: #374151;">
+        <li>View your assigned bookings</li>
+        <li>Manage your availability (if enabled by owner)</li>
+        <li>See your schedule</li>
+      </ul>
+      ${button(params.inviteUrl, "Accept Invitation")}
+      <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+        This invitation expires in 7 days. If you didn't expect this, you can safely ignore this email.
+      </p>
+    `),
+  };
+}

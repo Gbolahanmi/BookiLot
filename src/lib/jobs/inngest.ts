@@ -94,11 +94,11 @@ export const sendReminder = inngest.createFunction(
 );
 
 /**
- * Auto-mark no-shows after appointment time + threshold.
+ * Auto-mark no-shows. Runs every 15 minutes via Inngest cron.
  */
 export const handleNoShows = inngest.createFunction(
   { id: "handle-no-shows" },
-  { event: "cron/15min" },
+  { cron: "*/15 * * * *" },
   async ({ step: _step }) => {
     const threshold = addHours(new Date(), -NO_SHOW_THRESHOLD_MINUTES / 60);
 

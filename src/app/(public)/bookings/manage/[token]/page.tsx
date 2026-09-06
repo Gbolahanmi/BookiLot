@@ -18,22 +18,26 @@ interface Booking {
   customerName: string;
   customerEmail: string | null;
   customerPhone: string | null;
+  timezone: string;
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+function formatDate(dateStr: string, tz: string) {
+  return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  });
+    timeZone: tz,
+  }).format(new Date(dateStr));
 }
 
-function formatTime(dateStr: string) {
-  return new Date(dateStr).toLocaleTimeString("en-US", {
+function formatTime(dateStr: string, tz: string) {
+  return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
-  });
+    hour12: true,
+    timeZone: tz,
+  }).format(new Date(dateStr));
 }
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
@@ -137,14 +141,15 @@ export default function BookingManagePage() {
           <div className="mb-6 space-y-2">
             <div className="flex items-center gap-3 text-sm">
               <span className="text-gray-500">Date:</span>
-              <span className="font-medium text-gray-900">{formatDate(booking.startsAt)}</span>
+              <span className="font-medium text-gray-900">{formatDate(booking.startsAt, booking.timezone)}</span>
             </div>
             <div className="flex items-center gap-3 text-sm">
               <span className="text-gray-500">Time:</span>
               <span className="font-medium text-gray-900">
-                {formatTime(booking.startsAt)} – {formatTime(booking.endsAt)}
+                {formatTime(booking.startsAt, booking.timezone)} – {formatTime(booking.endsAt, booking.timezone)}
               </span>
             </div>
+            <p className="text-xs text-gray-400">{booking.timezone.replace("_", " ")}</p>
             {booking.staffName && (
               <div className="flex items-center gap-3 text-sm">
                 <span className="text-gray-500">Staff:</span>

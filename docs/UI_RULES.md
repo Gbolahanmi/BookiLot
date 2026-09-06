@@ -3,10 +3,12 @@
 ## Design Principles
 
 1. **Clarity over cleverness** — Every element has a clear purpose. No decorative-only UI.
-2. **Mobile-first** — Business owners check bookings from their phones. Design for 360px up.
+2. **Mobile-first** — Business owners n customer check bookings from their phones. Design for 360px up.
 3. **Consistent spacing** — Use Tailwind's spacing scale (4px base). No arbitrary values.
 4. **Accessible by default** — Proper contrast ratios, focus states, semantic HTML.
 5. **Empty states are content** — Every empty state tells the user what to do next.
+   Only install tailwinnd component when its really important else build custom reusable component
+   Don't use CSS icons svg
 
 ---
 

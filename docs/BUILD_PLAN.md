@@ -1,34 +1,3 @@
-# Bookilot — Build Plan
-
-## Timeline Summary
-
-| Week | Focus | Deliverable |
-|------|-------|-------------|
-| 1 | Foundation | Project init, schema, auth, DB connection |
-| 2 | Core Logic | Booking service (availability, create, cancel) — tested |
-| 3 | API Layer | All API routes with zod validation |
-| 4-5 | Dashboard UI | Onboarding, bookings, services, staff pages |
-| 6 | Widget | Public booking widget (iframe-ready) |
-| 7 | Integrations | Paystack + Twilio + Inngest + Nodemailer |
-| 8 | Billing + Polish | Subscription page, error states, mobile testing |
-| 9-10 | Testing + Deploy | E2E tests, staging, pilot onboarding |
-
----
-
-## Phase 0: Foundation (Week 1) — COMPLETE
-
-- [x] Initialize Next.js project (TypeScript, Tailwind, App Router)
-- [x] Create package.json with all dependencies
-- [x] Configure tsconfig.json, postcss, drizzle.config.ts
-- [x] Create `.env.example` with all required env vars
-- [x] Create full directory structure
-- [x] Create all Drizzle schema files (13 tables)
-- [x] Create database connection (`src/lib/db/index.ts`)
-- [x] Create constants file (`src/lib/constants.ts`)
-- [x] Create utility functions (`src/lib/utils/index.ts`)
-
----
-
 ## Phase 1: Core Booking Service (Week 2) — COMPLETE
 
 - [x] `availability.service.ts` — `computeAvailableSlots()`, `getRecommendedSlots()`
@@ -40,6 +9,7 @@
 ## Phase 2: Auth + Multi-Tenancy (Week 1-2) — COMPLETE
 
 ### Built
+
 - [x] AuthJS config with Google + Credentials providers
 - [x] bcrypt password hashing
 - [x] JWT token helpers (email verification + password reset)
@@ -48,6 +18,7 @@
 - [x] Session provider + type augmentation
 
 ### Auth Pages
+
 - [x] Login page (email/password + Google OAuth)
 - [x] Register page (name, email, password)
 - [x] Forgot password page (email input → sends reset link)
@@ -56,6 +27,7 @@
 - [x] Onboarding banner (shows for `email_verified` users)
 
 ### Auth API Routes
+
 - [x] `POST /api/auth/register` — creates user with `status: "pending"`, sends verification email
 - [x] `GET /api/auth/verify-email?token=jwt` — verifies email, sets `status: "email_verified"`
 - [x] `POST /api/auth/resend-verification` — resends verification email
@@ -64,6 +36,7 @@
 - [x] `POST /api/onboarding/complete` — creates org/services/hours, sets `status: "active"`
 
 ### Account Lifecycle
+
 ```
 Register (status: "pending")
     ↓
@@ -128,18 +101,20 @@ Full Dashboard Access
 - [x] Inngest setup (`src/lib/jobs/inngest.ts`)
 
 ### Email System Details
+
 - **Transporter:** Nodemailer with configurable SMTP
 - **Templates:** 4 types (verification, password reset, booking confirmation, booking reminder)
 - **Helpers:** `sendVerificationEmail()`, `sendPasswordResetEmail()`, `sendBookingConfirmationEmail()`, `sendBookingReminderEmail()`
 - **Configuration:** All via env vars (`SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`, `FROM_NAME`)
 
 ### SMTP Provider Options
-| Provider | Free Tier | Notes |
-|----------|-----------|-------|
-| Gmail | 500/day | Needs App Password |
-| SendGrid | 100/day | Good deliverability |
-| Mailgun | Pay-as-you-go | Good for Africa |
-| Brevo | 300/day | Supports SMTP |
+
+| Provider | Free Tier     | Notes               |
+| -------- | ------------- | ------------------- |
+| Gmail    | 500/day       | Needs App Password  |
+| SendGrid | 100/day       | Good deliverability |
+| Mailgun  | Pay-as-you-go | Good for Africa     |
+| Brevo    | 300/day       | Supports SMTP       |
 
 ---
 
@@ -170,47 +145,24 @@ Full Dashboard Access
 
 ---
 
-## Environment Variables Needed
-
-```env
-# Database
-DATABASE_URL=                    # PostgreSQL connection string
-
-# AuthJS
-AUTH_SECRET=                     # Random 32-char string
-AUTH_URL=                        # http://localhost:3000
-
-# Google OAuth
-GOOGLE_CLIENT_ID=                # Google OAuth client ID
-GOOGLE_CLIENT_SECRET=            # Google OAuth client secret
-
-# Upstash Redis
-UPSTASH_REDIS_REST_URL=          # Redis REST URL
-UPSTASH_REDIS_REST_TOKEN=        # Redis auth token
-
-# Paystack
-PAYSTACK_SECRET_KEY=             # sk_live_xxx
-PAYSTACK_PUBLIC_KEY=             # pk_live_xxx
-PAYSTACK_WEBHOOK_SECRET=         # whsec_xxx
-
-# Twilio (SMS)
-TWILIO_ACCOUNT_SID=              # ACxxx
-TWILIO_AUTH_TOKEN=               # Auth token
-TWILIO_PHONE_NUMBER=             # +234xxx
-
-# SMTP (Email via Nodemailer)
-SMTP_HOST=                       # smtp.gmail.com
-SMTP_PORT=                       # 587
-SMTP_SECURE=                     # false
-SMTP_USER=                       # your@email.com
-SMTP_PASS=                       # your-app-password
-FROM_EMAIL=                      # bookings@bookilot.app
-FROM_NAME=                       # Bookilot
-
-# Inngest
-INNGEST_EVENT_KEY=               # Event key
-INNGEST_SIGNING_KEY=             # Signing key
-
-# App
-NEXT_PUBLIC_APP_URL=             # http://localhost:3000
-```
+MVP Flow (What You Need to Ship)
+Phase 1: Security (Critical — Do First)
+Add auth to all API routes — wrap with requireAuth() or requireOwner()
+Add orgId filtering to all admin endpoints
+Fix the widget booking flow — create customer on-the-fly instead of customerId: "temp"
+Fix booking cancel — pass correct orgId
+Add rate limiting — Upstash Redis is already configured
+Phase 2: Core Flow (What Users Actually Do)
+Registration → Onboarding → Dashboard (already works)
+Create service → share booking link
+Customer books → owner gets notification
+Booking confirmation → email + optional SMS
+Cancel/reschedule via manage link
+Phase 3: Billing
+Subscription enforcement — check plan limits before allowing actions
+Paystack subscription creation — when user upgrades
+Webhook handling — subscription created, updated, cancelled
+Phase 4: Notifications
+Inngest integration — wire up the stub endpoint
+Booking reminders — 24h before via email + SMS
+No-show tracking — auto-mark after 15 min

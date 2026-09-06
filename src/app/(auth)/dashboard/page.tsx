@@ -1,18 +1,37 @@
 "use client";
 
+import { useState } from "react";
 import useSWR from "swr";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/ToastContext";
 import { EmptyState } from "@/components/ui/empty-state";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export default function DashboardPage() {
-  const { data: stats, error: statsError } = useSWR("/api/dashboard/stats", fetcher);
-  const { data: bookings, error: bookingsError } = useSWR("/api/dashboard/today-bookings", fetcher);
+  const { addToast } = useToast();
+  const { data: stats, error: statsError } = useSWR(
+    "/api/dashboard/stats",
+    fetcher,
+  );
+  const { data: bookings, error: bookingsError } = useSWR(
+    "/api/dashboard/today-bookings",
+    fetcher,
+  );
+  const { data: settings } = useSWR("/api/settings", fetcher);
 
   const statsLoading = !stats && !statsError;
   const bookingsLoading = !bookings && !bookingsError;
+
+  const widgetUrl = settings?.id
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/widget?orgId=${settings.id}`
+    : "";
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(widgetUrl);
+    addToast({ type: "success", title: "Booking link copied!" });
+  };
 
   return (
     <DashboardLayout>
@@ -33,7 +52,10 @@ export default function DashboardPage() {
             : [
                 { label: "Today's Bookings", value: stats?.todayBookings ?? 0 },
                 { label: "This Week", value: stats?.weekBookings ?? 0 },
-                { label: "Revenue (Month)", value: `$${(stats?.monthRevenue ?? 0).toLocaleString()}` },
+                {
+                  label: "Revenue (Month)",
+                  value: `$${(stats?.monthRevenue ?? 0).toLocaleString()}`,
+                },
                 { label: "No-Show Rate", value: `${stats?.noShowRate ?? 0}%` },
               ].map((stat) => (
                 <div
@@ -48,6 +70,31 @@ export default function DashboardPage() {
               ))}
         </div>
 
+        {/* Share Booking Link */}
+        {widgetUrl && (
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Share Your Booking Link
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Share this link with customers so they can book appointments.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={widgetUrl}
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+              />
+              <button
+                onClick={copyLink}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Today's Bookings */}
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -58,23 +105,43 @@ export default function DashboardPage() {
           ) : bookingsError ? (
             <p className="text-sm text-red-600">Failed to load bookings.</p>
           ) : bookings?.length === 0 ? (
-            <EmptyState
-              title="No bookings yet"
-              description="Bookings will appear here once customers start booking."
-            />
+            <div className="py-8 text-center">
+              <EmptyState
+                title="No bookings today"
+                description="Bookings will appear here once customers start booking."
+              ></EmptyState>
+              <p className="text-xs text-gray-400">
+                Share your booking link above to start getting appointments.
+              </p>
+            </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {bookings?.map((b: { id: string; customerName: string; time: string; service: string; status: string }) => (
-                <div key={b.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium text-gray-900">{b.customerName}</p>
-                    <p className="text-sm text-gray-500">{b.service} — {b.time}</p>
+              {bookings?.map(
+                (b: {
+                  id: string;
+                  customerName: string;
+                  time: string;
+                  service: string;
+                  status: string;
+                }) => (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between py-3"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {b.customerName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {b.service} — {b.time}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                      {b.status}
+                    </span>
                   </div>
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
-                    {b.status}
-                  </span>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           )}
         </div>

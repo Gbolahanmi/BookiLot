@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type Step = 1 | 2 | 3;
 
 export default function OnboardingPage() {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -77,7 +79,9 @@ export default function OnboardingPage() {
         return;
       }
 
-      window.location.href = "/dashboard";
+      // Force session refresh so JWT picks up new status + orgId
+      await update();
+      router.push("/dashboard");
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);

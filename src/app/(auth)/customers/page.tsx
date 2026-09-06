@@ -20,9 +20,10 @@ interface Customer {
 
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
-  const { data: customers, error, isLoading } = useSWR("/api/customers", fetcher);
+  const { data, error, isLoading } = useSWR("/api/customers", fetcher);
+  const customers: Customer[] = data?.customers ?? [];
 
-  const filtered: Customer[] = (customers || []).filter(
+  const filtered: Customer[] = customers.filter(
     (c: Customer) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase()) ||

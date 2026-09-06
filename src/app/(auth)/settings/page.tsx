@@ -132,6 +132,37 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* Booking Link */}
+        {settings?.id && (
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              Your Booking Link
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Share this link with customers so they can book appointments. Embed it on your website or send it directly.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                readOnly
+                value={`${typeof window !== "undefined" ? window.location.origin : ""}/widget?orgId=${settings.id}`}
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+              />
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/widget?orgId=${settings.id}`);
+                  addToast({ type: "success", title: "Booking link copied!" });
+                }}
+                variant="outline"
+              >
+                Copy
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Organization ID: {settings.id}
+            </p>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="space-y-6">
             <SkeletonCard />
@@ -191,6 +222,43 @@ export default function SettingsPage() {
                       setForm({ ...form, description: e.target.value })
                     }
                   />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    Timezone
+                  </label>
+                  <select
+                    value={form.timezone}
+                    onChange={(e) =>
+                      setForm({ ...form, timezone: e.target.value })
+                    }
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  >
+                    <optgroup label="Americas">
+                      <option value="America/New_York">Eastern Time (US & Canada)</option>
+                      <option value="America/Chicago">Central Time (US & Canada)</option>
+                      <option value="America/Denver">Mountain Time (US & Canada)</option>
+                      <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                      <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+                      <option value="America/Mexico_City">Mexico City (CST)</option>
+                    </optgroup>
+                    <optgroup label="Europe & Africa">
+                      <option value="Europe/London">London (GMT/BST)</option>
+                      <option value="Europe/Paris">Paris (CET/CEST)</option>
+                      <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                      <option value="Europe/Lagos">Lagos (WAT)</option>
+                      <option value="Africa/Nairobi">Nairobi (EAT)</option>
+                      <option value="Africa/Johannesburg">Johannesburg (SAST)</option>
+                      <option value="Africa/Cairo">Cairo (EET)</option>
+                    </optgroup>
+                    <optgroup label="Asia & Pacific">
+                      <option value="Asia/Dubai">Dubai (GST)</option>
+                      <option value="Asia/Kolkata">India (IST)</option>
+                      <option value="Asia/Singapore">Singapore (SGT)</option>
+                      <option value="Asia/Tokyo">Tokyo (JST)</option>
+                      <option value="Australia/Sydney">Sydney (AEST)</option>
+                    </optgroup>
+                  </select>
                 </div>
                 <div className="flex gap-3">
                   <Button onClick={handleSave} disabled={saving}>
