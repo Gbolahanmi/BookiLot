@@ -1,19 +1,45 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import {
+  verificationTemplate,
+  passwordResetTemplate,
+  bookingConfirmationTemplate,
+  bookingReminderTemplate,
+  staffInviteTemplate,
+} from "./templates";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const fromEmail = "bookings@bookilot.app";
+// ─── Transporter (lazy singleton) ─────────────────────────
+let _transporter: nodemailer.Transporter | null = null;
 
-/**
- * Send a transactional email.
- */
+function getTransporter(): nodemailer.Transporter {
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+  return _transporter;
+}
+
+function getFromAddress(): string {
+  const name = process.env.FROM_NAME || "Bookilot";
+  const email = process.env.FROM_EMAIL || "bookings@bookilot.app";
+  return `${name} <${email}>`;
+}
+
+// ─── Low-level send ───────────────────────────────────────
 export async function sendEmail(params: {
   to: string;
   subject: string;
   html: string;
 }): Promise<boolean> {
   try {
-    await resend.emails.send({
-      from: fromEmail,
+    await getTransporter().sendMail({
+      from: getFromAddress(),
       to: params.to,
       subject: params.subject,
       html: params.html,
@@ -25,9 +51,28 @@ export async function sendEmail(params: {
   }
 }
 
-/**
- * Send booking confirmation email.
- */
+// ─── High-level helpers ───────────────────────────────────
+
+export async function sendVerificationEmail(
+  to: string,
+  params: { name: string; token: string }
+): Promise<boolean> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const url = `${appUrl}/api/auth/verify-email?token=${params.token}`;
+  const template = verificationTemplate({ name: params.name, url });
+  return sendEmail({ to, ...template });
+}
+
+export async function sendPasswordResetEmail(
+  to: string,
+  params: { token: string }
+): Promise<boolean> {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const url = `${appUrl}/reset-password?token=${params.token}`;
+  const template = passwordResetTemplate({ url });
+  return sendEmail({ to, ...template });
+}
+
 export async function sendBookingConfirmationEmail(
   to: string,
   params: {
@@ -40,41 +85,10 @@ export async function sendBookingConfirmationEmail(
     manageUrl: string;
   }
 ): Promise<boolean> {
-  const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #1a1a1a;">Booking Confirmed</h2>
-      <p>Hi ${params.customerName},</p>
-      <p>Your booking with <strong>${params.businessName}</strong> has been confirmed.</p>
-      
-      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Service:</strong> ${params.serviceName}</p>
-        <p style="margin: 5px 0;"><strong>Date:</strong> ${params.date}</p>
-        <p style="margin: 5px 0;"><strong>Time:</strong> ${params.time}</p>
-        <p style="margin: 5px 0;"><strong>Duration:</strong> ${params.duration}</p>
-      </div>
-      
-      <p>
-        <a href="${params.manageUrl}" style="color: #0066cc;">
-          Manage or cancel your booking
-        </a>
-      </p>
-      
-      <p style="color: #666; font-size: 12px; margin-top: 30px;">
-        This email was sent by Bookilot.
-      </p>
-    </div>
-  `;
-
-  return sendEmail({
-    to,
-    subject: `Booking confirmed with ${params.businessName}`,
-    html,
-  });
+  const template = bookingConfirmationTemplate(params);
+  return sendEmail({ to, ...template });
 }
 
-/**
- * Send booking reminder email.
- */
 export async function sendBookingReminderEmail(
   to: string,
   params: {
@@ -86,29 +100,19 @@ export async function sendBookingReminderEmail(
     manageUrl: string;
   }
 ): Promise<boolean> {
-  const html = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2 style="color: #1a1a1a;">Appointment Reminder</h2>
-      <p>Hi ${params.customerName},</p>
-      <p>This is a reminder that your appointment with <strong>${params.businessName}</strong> is tomorrow.</p>
-      
-      <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Service:</strong> ${params.serviceName}</p>
-        <p style="margin: 5px 0;"><strong>Date:</strong> ${params.date}</p>
-        <p style="margin: 5px 0;"><strong>Time:</strong> ${params.time}</p>
-      </div>
-      
-      <p>
-        <a href="${params.manageUrl}" style="color: #0066cc;">
-          Manage or cancel your booking
-        </a>
-      </p>
-    </div>
-  `;
+  const template = bookingReminderTemplate(params);
+  return sendEmail({ to, ...template });
+}
 
-  return sendEmail({
-    to,
-    subject: `Reminder: Appointment tomorrow with ${params.businessName}`,
-    html,
-  });
+export async function sendStaffInviteEmail(
+  to: string,
+  params: {
+    staffName: string;
+    ownerName: string;
+    businessName: string;
+    inviteUrl: string;
+  }
+): Promise<boolean> {
+  const template = staffInviteTemplate(params);
+  return sendEmail({ to, ...template });
 }

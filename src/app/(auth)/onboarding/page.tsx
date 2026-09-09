@@ -3,23 +3,27 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 type Step = 1 | 2 | 3;
 
 export default function OnboardingPage() {
+  const { data: session, update } = useSession();
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const [business, setBusiness] = useState({
     name: "",
     phone: "",
-    email: "",
     address: "",
-    timezone: "Africa/Lagos",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   });
 
   const [services, setServices] = useState([
-    { name: "", duration: "30", price: "" },
+    { name: "", duration: "30", price: "", description: "" },
   ]);
 
   const [hours, setHours] = useState(
@@ -32,7 +36,7 @@ export default function OnboardingPage() {
   );
 
   const addService = () => {
-    setServices([...services, { name: "", duration: "30", price: "" }]);
+    setServices([...services, { name: "", duration: "30", price: "", description: "" }]);
   };
 
   const updateService = (
@@ -51,10 +55,37 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setLoading(true);
-    // TODO: Call API to save onboarding data
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 1500);
+    setError("");
+
+    try {
+      const res = await fetch("/api/onboarding/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          business: {
+            ...business,
+            email: session?.user?.email,
+          },
+          services: services.filter((s) => s.name),
+          workingHours: hours,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to complete setup");
+        setLoading(false);
+        return;
+      }
+
+      // Force session refresh so JWT picks up new status + orgId
+      await update();
+      router.push("/dashboard");
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -91,6 +122,12 @@ export default function OnboardingPage() {
           ))}
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
           {/* Step 1: Business Info */}
           {step === 1 && (
@@ -98,6 +135,11 @@ export default function OnboardingPage() {
               <h2 className="text-xl font-semibold text-gray-900">
                 Business Information
               </h2>
+              {session?.user?.email && (
+                <p className="text-sm text-gray-500">
+                  Business email: <span className="font-medium text-gray-700">{session.user.email}</span>
+                </p>
+              )}
               <Input
                 id="name"
                 label="Business Name"
@@ -112,7 +154,7 @@ export default function OnboardingPage() {
                 id="phone"
                 label="Phone Number"
                 type="tel"
-                placeholder="+234 xxx xxx xxxx"
+                placeholder="+1 (555) 123-4567"
                 value={business.phone}
                 onChange={(e) =>
                   setBusiness({ ...business, phone: e.target.value })
@@ -120,24 +162,49 @@ export default function OnboardingPage() {
                 required
               />
               <Input
-                id="email"
-                label="Email"
-                type="email"
-                placeholder="hello@mysalon.com"
-                value={business.email}
-                onChange={(e) =>
-                  setBusiness({ ...business, email: e.target.value })
-                }
-              />
-              <Input
                 id="address"
-                label="Address"
-                placeholder="123 Main St, Lagos"
+                label="Address (optional)"
+                placeholder="123 Main St, New York"
                 value={business.address}
                 onChange={(e) =>
                   setBusiness({ ...business, address: e.target.value })
                 }
               />
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700">Timezone</label>
+                <select
+                  value={business.timezone}
+                  onChange={(e) =>
+                    setBusiness({ ...business, timezone: e.target.value })
+                  }
+                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                  <optgroup label="Americas">
+                    <option value="America/New_York">Eastern Time (US & Canada)</option>
+                    <option value="America/Chicago">Central Time (US & Canada)</option>
+                    <option value="America/Denver">Mountain Time (US & Canada)</option>
+                    <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                    <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+                    <option value="America/Mexico_City">Mexico City (CST)</option>
+                  </optgroup>
+                  <optgroup label="Europe & Africa">
+                    <option value="Europe/London">London (GMT/BST)</option>
+                    <option value="Europe/Paris">Paris (CET/CEST)</option>
+                    <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                    <option value="Europe/Lagos">Lagos (WAT)</option>
+                    <option value="Africa/Nairobi">Nairobi (EAT)</option>
+                    <option value="Africa/Johannesburg">Johannesburg (SAST)</option>
+                    <option value="Africa/Cairo">Cairo (EET)</option>
+                  </optgroup>
+                  <optgroup label="Asia & Pacific">
+                    <option value="Asia/Dubai">Dubai (GST)</option>
+                    <option value="Asia/Kolkata">India (IST)</option>
+                    <option value="Asia/Singapore">Singapore (SGT)</option>
+                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                    <option value="Australia/Sydney">Sydney (AEST)</option>
+                  </optgroup>
+                </select>
+              </div>
               <div className="pt-4">
                 <Button
                   onClick={() => setStep(2)}
@@ -184,6 +251,12 @@ export default function OnboardingPage() {
                     value={service.name}
                     onChange={(e) => updateService(i, "name", e.target.value)}
                   />
+                  <Input
+                    id={`svc-desc-${i}`}
+                    placeholder="Brief description (optional)"
+                    value={service.description}
+                    onChange={(e) => updateService(i, "description", e.target.value)}
+                  />
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-700">
@@ -205,7 +278,7 @@ export default function OnboardingPage() {
                     </div>
                     <Input
                       id={`svc-price-${i}`}
-                      label="Price (₦)"
+                      label="Price"
                       type="number"
                       placeholder="0"
                       value={service.price}

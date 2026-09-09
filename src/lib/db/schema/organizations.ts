@@ -4,7 +4,7 @@ export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
-  timezone: varchar("timezone", { length: 50 }).notNull().default("Africa/Lagos"),
+  timezone: varchar("timezone", { length: 50 }).notNull().default("UTC"),
   phone: varchar("phone", { length: 20 }),
   email: varchar("email", { length: 255 }),
   logoUrl: text("logo_url"),

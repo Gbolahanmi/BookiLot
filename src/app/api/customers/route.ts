@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { customers, bookings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { requireStaff } from "@/lib/auth/tenant";
 
 /**
- * GET /api/customers?orgId=xxx
+ * GET /api/customers — returns customers for the authenticated user's org
  */
-export async function GET(request: NextRequest) {
-  const { searchParams } = request.nextUrl;
-  const orgId = searchParams.get("orgId");
+export async function GET() {
+  const user = await requireStaff();
 
-  if (!orgId) {
+  if (!user.organizationId) {
     return NextResponse.json(
-      { error: "organizationId is required" },
+      { error: "No organization linked to this account" },
       { status: 400 }
     );
   }
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     })
     .from(customers)
     .leftJoin(bookings, eq(customers.id, bookings.customerId))
-    .where(eq(customers.organizationId, orgId))
+    .where(eq(customers.organizationId, user.organizationId))
     .groupBy(customers.id)
     .orderBy(sql`${customers.createdAt} DESC`);
 

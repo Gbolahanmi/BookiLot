@@ -5,7 +5,7 @@ import { cancelBooking, getBookingByManageToken } from "@/lib/services/booking.s
  * GET /api/bookings/manage/[token] — public booking lookup
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
@@ -29,23 +29,23 @@ export async function PATCH(
   const { token } = await params;
   const body = await request.json();
 
+  if (body.action !== "cancel") {
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+
   const booking = await getBookingByManageToken(token);
   if (!booking) {
     return NextResponse.json({ error: "Booking not found" }, { status: 404 });
   }
 
-  if (body.action === "cancel") {
-    const result = await cancelBooking({
-      bookingId: booking.id,
-      organizationId: "", // We need to derive this from the booking
-    });
+  const result = await cancelBooking({
+    bookingId: booking.id,
+    organizationId: booking.organizationId,
+  });
 
-    if (!result.success) {
-      return NextResponse.json({ error: result.error }, { status: 400 });
-    }
-
-    return NextResponse.json({ booking: result.booking });
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  return NextResponse.json({ booking: result.booking });
 }

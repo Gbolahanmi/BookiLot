@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
-import { bookings, customers, services, staffMembers } from "@/lib/db/schema";
-import { eq, and, gte, lte, ne } from "drizzle-orm";
-import { generateToken } from "@/lib/utils";
+import { bookings, customers, services, staffMembers, organizations } from "@/lib/db/schema";
+import { eq, and, gte, lte, ne, sql } from "drizzle-orm";
+import { generateToken } from "@/lib/utils/server";
 import {
   BOOKING_STATUS,
   CANCELLATION_WINDOW_HOURS,
@@ -26,9 +26,9 @@ export interface BookingResult {
 }
 
 /**
- * Create a booking atomically.
+ * Create a booking.
  * Uses idempotency key to prevent duplicate bookings.
- * Uses transaction to prevent race-condition double-bookings.
+ * Checks for overlapping bookings before inserting.
  */
 export async function createBooking(
   params: CreateBookingParams
@@ -44,7 +44,7 @@ export async function createBooking(
     notes,
   } = params;
 
-  // 1. Check idempotency key
+  // 1. Check idempotency key (read-only, outside transaction)
   if (idempotencyKey) {
     const existing = await db
       .select()
@@ -57,7 +57,7 @@ export async function createBooking(
     }
   }
 
-  // 2. Get service to calculate end time
+  // 2. Get service to calculate end time (read-only, outside transaction)
   const [service] = await db
     .select()
     .from(services)
@@ -70,7 +70,7 @@ export async function createBooking(
 
   const endsAt = new Date(startsAt.getTime() + service.durationMinutes * 60 * 1000);
 
-  // 3. Check for overlapping bookings (atomic check via transaction)
+  // 3. Check for overlapping bookings
   const overlapping = await db
     .select()
     .from(bookings)
@@ -92,7 +92,7 @@ export async function createBooking(
   }
 
   // 4. Create the booking
-  const manageToken = generateToken(32);
+  const manageToken = generateToken();
 
   const [booking] = await db
     .insert(bookings)
@@ -103,7 +103,7 @@ export async function createBooking(
       customerId,
       startsAt,
       endsAt,
-      status: BOOKING_STATUS.PENDING,
+      status: BOOKING_STATUS.CONFIRMED,
       channel,
       idempotencyKey: idempotencyKey || null,
       notes,
@@ -151,12 +151,12 @@ export async function cancelBooking(
     return { success: false, error: "Booking cannot be cancelled" };
   }
 
-  // 2. Check cancellation window
+  // 2. Check cancellation window (must cancel at least 2h before appointment)
   const cancellationDeadline = addHours(
     booking.startsAt,
     -CANCELLATION_WINDOW_HOURS
   );
-  if (isBefore(new Date(), cancellationDeadline)) {
+  if (isBefore(cancellationDeadline, new Date())) {
     return {
       success: false,
       error: `Cannot cancel within ${CANCELLATION_WINDOW_HOURS} hours of appointment`,
@@ -234,7 +234,7 @@ export async function markNoShow(
   await db
     .update(customers)
     .set({
-      noShowCount: customers.noShowCount,
+      noShowCount: sql`${customers.noShowCount} + 1`,
       updatedAt: new Date(),
     })
     .where(eq(customers.id, updated.customerId));
@@ -249,6 +249,7 @@ export async function getBookingByManageToken(token: string) {
   const [booking] = await db
     .select({
       id: bookings.id,
+      organizationId: bookings.organizationId,
       startsAt: bookings.startsAt,
       endsAt: bookings.endsAt,
       status: bookings.status,
@@ -260,11 +261,13 @@ export async function getBookingByManageToken(token: string) {
       customerName: customers.name,
       customerEmail: customers.email,
       customerPhone: customers.phone,
+      timezone: organizations.timezone,
     })
     .from(bookings)
     .innerJoin(services, eq(bookings.serviceId, services.id))
     .leftJoin(staffMembers, eq(bookings.staffMemberId, staffMembers.id))
     .innerJoin(customers, eq(bookings.customerId, customers.id))
+    .innerJoin(organizations, eq(bookings.organizationId, organizations.id))
     .where(eq(bookings.manageToken, token))
     .limit(1);
 

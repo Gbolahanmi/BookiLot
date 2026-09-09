@@ -1,10 +1,10 @@
 import { Inngest } from "inngest";
-import { db } from "./db";
-import { bookings, customers, services, organizations } from "./db/schema";
-import { eq, and, lte } from "drizzle-orm";
-import { sendBookingReminder } from "./sms";
-import { sendBookingReminderEmail } from "./email";
-import { addHours, format } from "date-fns";
+import { db } from "@/lib/db";
+import { bookings, customers, services, organizations, invites } from "@/lib/db/schema";
+import { eq, and, lte, sql, lt, isNotNull } from "drizzle-orm";
+import { sendBookingReminder, sendSms } from "@/lib/sms";
+import { sendBookingReminderEmail, sendBookingCancellationEmail } from "@/lib/email";
+import { addHours, format, subDays } from "date-fns";
 import { BOOKING_STATUS, REMINDER_HOURS_BEFORE, NO_SHOW_THRESHOLD_MINUTES } from "@/lib/constants";
 
 export const inngest = new Inngest({ id: "bookilot" });
@@ -15,7 +15,7 @@ export const inngest = new Inngest({ id: "bookilot" });
 export const sendReminder = inngest.createFunction(
   { id: "send-reminder" },
   { event: "booking.created" },
-  async ({ event }) => {
+  async ({ event, step }) => {
     const { bookingId } = event.data;
 
     // Wait until 24h before the appointment
@@ -41,7 +41,7 @@ export const sendReminder = inngest.createFunction(
       .where(eq(bookings.id, bookingId))
       .limit(1);
 
-    if (!updatedBooking || updatedBooking.status !== BOOKING_STATUS.PENDING) return;
+    if (!updatedBooking || updatedBooking.status !== BOOKING_STATUS.CONFIRMED) return;
 
     // Get customer, service, org details
     const [customer] = await db
@@ -94,12 +94,12 @@ export const sendReminder = inngest.createFunction(
 );
 
 /**
- * Auto-mark no-shows after appointment time + threshold.
+ * Auto-mark no-shows. Runs every 15 minutes via Inngest cron.
  */
 export const handleNoShows = inngest.createFunction(
   { id: "handle-no-shows" },
-  { event: "cron/15min" },
-  async ({ step }) => {
+  { cron: "*/15 * * * *" },
+  async ({ step: _step }) => {
     const threshold = addHours(new Date(), -NO_SHOW_THRESHOLD_MINUTES / 60);
 
     // Find bookings that passed and are still pending/confirmed
@@ -126,10 +126,112 @@ export const handleNoShows = inngest.createFunction(
       await db
         .update(customers)
         .set({
-          noShowCount: customers.noShowCount,
+          noShowCount: sql`${customers.noShowCount} + 1`,
           updatedAt: new Date(),
         })
         .where(eq(customers.id, booking.customerId));
     }
+  }
+);
+
+/**
+ * Send cancellation notifications via SMS and email.
+ */
+export const sendCancellationNotification = inngest.createFunction(
+  { id: "send-cancellation-notification" },
+  { event: "booking.cancelled" },
+  async ({ event }) => {
+    const { bookingId } = event.data;
+
+    const [booking] = await db
+      .select()
+      .from(bookings)
+      .where(eq(bookings.id, bookingId))
+      .limit(1);
+
+    if (!booking) return;
+
+    const [customer] = await db
+      .select()
+      .from(customers)
+      .where(eq(customers.id, booking.customerId))
+      .limit(1);
+
+    const [service] = await db
+      .select()
+      .from(services)
+      .where(eq(services.id, booking.serviceId))
+      .limit(1);
+
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, booking.organizationId))
+      .limit(1);
+
+    if (!customer || !service || !org) return;
+
+    const dateStr = format(booking.startsAt, "MMM d, yyyy");
+    const timeStr = format(booking.startsAt, "h:mm a");
+    const manageUrl = `${process.env.NEXT_PUBLIC_APP_URL}/bookings/manage/${booking.manageToken}`;
+
+    // Send SMS
+    if (customer.phone) {
+      const message = [
+        `❌ Your booking has been cancelled.`,
+        ``,
+        `${service.name}`,
+        `📅 ${dateStr} at ${timeStr}`,
+        `📍 ${org.name}`,
+        ``,
+        `If this was a mistake, please rebook at: ${manageUrl}`,
+      ].join("\n");
+      await sendSms(customer.phone, message);
+    }
+
+    // Send email
+    if (customer.email) {
+      await sendBookingCancellationEmail(customer.email, {
+        customerName: customer.name,
+        businessName: org.name,
+        serviceName: service.name,
+        date: dateStr,
+        time: timeStr,
+        manageUrl,
+      });
+    }
+  }
+);
+
+/**
+ * Clean up expired and old accepted invites. Runs daily at 3am.
+ */
+export const cleanupInvites = inngest.createFunction(
+  { id: "cleanup-invites" },
+  { cron: "0 3 * * *" },
+  async ({ step: _step }) => {
+    const now = new Date();
+
+    // Delete accepted invites older than 30 days
+    const acceptedCutoff = subDays(now, 30);
+    await db
+      .delete(invites)
+      .where(
+        and(
+          isNotNull(invites.acceptedAt),
+          lt(invites.acceptedAt, acceptedCutoff)
+        )
+      );
+
+    // Delete expired invites older than 7 days
+    const expiredCutoff = subDays(now, 7);
+    await db
+      .delete(invites)
+      .where(
+        and(
+          lt(invites.expiresAt, expiredCutoff),
+          isNotNull(invites.expiresAt)
+        )
+      );
   }
 );

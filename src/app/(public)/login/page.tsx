@@ -8,6 +8,7 @@ import { Suspense } from "react";
 function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const message = searchParams.get("message");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,7 +26,7 @@ function LoginForm() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Invalid email or password. If you registered with Google, use the Google button above.");
       setLoading(false);
     } else {
       window.location.href = callbackUrl;
@@ -33,7 +34,7 @@ function LoginForm() {
   };
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl });
+    signIn("google", { callbackUrl: "/onboarding" });
   };
 
   return (
@@ -45,6 +46,12 @@ function LoginForm() {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
+          {message === "verified" && (
+            <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              Email verified successfully! Please sign in.
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
               {error}
@@ -128,8 +135,13 @@ function LoginForm() {
 
         <p className="mt-6 text-center text-sm text-gray-500">
           Don&apos;t have an account?{" "}
-          <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
             Get started
+          </a>
+        </p>
+        <p className="mt-2 text-center text-sm text-gray-500">
+          <a href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+            Forgot your password?
           </a>
         </p>
       </div>

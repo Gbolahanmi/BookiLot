@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { generateToken } from "@/lib/utils/server";
 import {
-  generateToken,
   generateShortCode,
   slugify,
   formatPrice,
@@ -11,14 +11,15 @@ import {
 
 describe("utils", () => {
   describe("generateToken", () => {
-    it("generates a token of specified length", () => {
-      expect(generateToken(32)).toHaveLength(32);
-      expect(generateToken(16)).toHaveLength(16);
+    it("generates a token", () => {
+      const token = generateToken();
+      expect(token).toBeTruthy();
+      expect(typeof token).toBe("string");
     });
 
     it("generates unique tokens", () => {
-      const token1 = generateToken(32);
-      const token2 = generateToken(32);
+      const token1 = generateToken();
+      const token2 = generateToken();
       expect(token1).not.toBe(token2);
     });
   });

@@ -1,12 +1,13 @@
 import { db } from "@/lib/db";
-import { services, workingHours, bookings, blockedTimes } from "@/lib/db/schema";
+import { services, workingHours, bookings, blockedTimes, organizations } from "@/lib/db/schema";
 import { eq, and, gte, lte, ne, isNull } from "drizzle-orm";
 import {
   BOOKING_STATUS,
   DEFAULT_BUFFER_MINUTES,
   WIDGET_CONFIG,
 } from "@/lib/constants";
-import { addMinutes, startOfDay, endOfDay, parseISO } from "date-fns";
+import { addMinutes, parseISO } from "date-fns";
+import { toZonedTime, format as formatTz } from "date-fns-tz";
 
 export interface TimeSlot {
   startsAt: Date;
@@ -24,6 +25,7 @@ export interface AvailabilityParams {
 /**
  * Compute available time slots for a service on a given date.
  * Accounts for: working hours, existing bookings, buffer time, blocked times.
+ * All times are computed in the organization's timezone.
  */
 export async function computeAvailableSlots(
   params: AvailabilityParams
@@ -43,11 +45,21 @@ export async function computeAvailableSlots(
   const buffer = service.bufferMinutes || DEFAULT_BUFFER_MINUTES;
   const slotSize = duration + buffer;
 
-  // 2. Get the day of week for the requested date
-  const targetDate = parseISO(date);
-  const dayOfWeek = targetDate.getDay();
+  // 2. Get the organization's timezone
+  const [org] = await db
+    .select({ timezone: organizations.timezone })
+    .from(organizations)
+    .where(eq(organizations.id, organizationId))
+    .limit(1);
 
-  // 3. Get working hours for this day
+  const tz = org?.timezone || "UTC";
+
+  // 3. Parse the date in the org's timezone
+  const targetDate = parseISO(date);
+  const zonedDate = toZonedTime(targetDate, tz);
+  const dayOfWeek = parseInt(formatTz(zonedDate, "e", { timeZone: tz }), 10) % 7;
+
+  // 4. Get working hours for this day
   const orgHours = await db
     .select()
     .from(workingHours)
@@ -56,8 +68,6 @@ export async function computeAvailableSlots(
         eq(workingHours.organizationId, organizationId),
         eq(workingHours.dayOfWeek, dayOfWeek),
         eq(workingHours.active, true),
-        // org-wide hours have null staffMemberId
-        // staff-specific hours have a staffMemberId
         staffMemberId
           ? eq(workingHours.staffMemberId, staffMemberId)
           : isNull(workingHours.staffMemberId)
@@ -66,9 +76,11 @@ export async function computeAvailableSlots(
 
   if (orgHours.length === 0) return [];
 
-  // 4. Get existing bookings for this date (non-cancelled)
-  const dayStart = startOfDay(targetDate);
-  const dayEnd = endOfDay(targetDate);
+  // 5. Compute day boundaries in UTC for the query
+  const dayStartStr = `${date}T00:00:00`;
+  const dayEndStr = `${date}T23:59:59`;
+  const dayStart = toZonedTime(parseISO(dayStartStr), tz);
+  const dayEnd = toZonedTime(parseISO(dayEndStr), tz);
 
   const existingBookings = await db
     .select()
@@ -79,14 +91,13 @@ export async function computeAvailableSlots(
         gte(bookings.startsAt, dayStart),
         lte(bookings.startsAt, dayEnd),
         ne(bookings.status, BOOKING_STATUS.CANCELLED),
-        // if staffMemberId specified, filter to that staff
         staffMemberId
           ? eq(bookings.staffMemberId, staffMemberId)
           : undefined
       )
     );
 
-  // 5. Get blocked times
+  // 6. Get blocked times
   const blocked = await db
     .select()
     .from(blockedTimes)
@@ -101,8 +112,9 @@ export async function computeAvailableSlots(
       )
     );
 
-  // 6. Generate all possible slots from working hours
+  // 7. Generate slots in the org's timezone, convert to UTC
   const slots: TimeSlot[] = [];
+  const now = new Date();
 
   for (const hours of orgHours) {
     const [startH, startM] = hours.startTime.split(":").map(Number);
@@ -116,13 +128,16 @@ export async function computeAvailableSlots(
       cursor + slotSize <= workEndMinutes;
       cursor += WIDGET_CONFIG.SLOT_INCREMENT_MINUTES
     ) {
-      const slotStart = new Date(targetDate);
-      slotStart.setHours(Math.floor(cursor / 60), cursor % 60, 0, 0);
+      // Build the slot time as a string in the org's timezone, then convert to UTC
+      const slotHour = Math.floor(cursor / 60).toString().padStart(2, "0");
+      const slotMin = (cursor % 60).toString().padStart(2, "0");
+      const slotTimeStr = `${date}T${slotHour}:${slotMin}:00`;
+      const slotStart = toZonedTime(parseISO(slotTimeStr), tz);
 
       const slotEnd = addMinutes(slotStart, duration);
 
-      // Skip if in the past (for today)
-      if (slotStart <= new Date()) continue;
+      // Skip if in the past
+      if (slotStart <= now) continue;
 
       // Check overlap with existing bookings
       const hasBookingOverlap = existingBookings.some(

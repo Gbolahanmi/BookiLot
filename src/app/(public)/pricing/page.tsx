@@ -3,7 +3,7 @@ import Link from "next/link";
 const tiers = [
   {
     name: "Free",
-    price: "₦0",
+    price: "$0",
     period: "/month",
     description: "Perfect for trying out Bookilot",
     features: [
@@ -19,7 +19,7 @@ const tiers = [
   },
   {
     name: "Pro",
-    price: "₦15,000",
+    price: "$29",
     period: "/month",
     description: "For growing businesses ready to reduce no-shows",
     features: [

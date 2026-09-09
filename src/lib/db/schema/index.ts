@@ -11,3 +11,4 @@ export { payments } from "./payments";
 export { waitlistEntries } from "./waitlist";
 export { auditLogs } from "./audit-logs";
 export { subscriptions } from "./subscriptions";
+export { invites } from "./invites";

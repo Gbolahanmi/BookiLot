@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,7 @@ interface TimeSlot {
 
 type Step = "service" | "datetime" | "details" | "confirm";
 
-export default function WidgetPage() {
+function WidgetContent() {
   const searchParams = useSearchParams();
   const orgId = searchParams.get("orgId") || "";
 
@@ -36,23 +36,24 @@ export default function WidgetPage() {
   const [recommendedSlots, setRecommendedSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [orgTimezone, setOrgTimezone] = useState("UTC");
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [bookingComplete, setBookingComplete] = useState(false);
   const [manageUrl, setManageUrl] = useState("");
 
-  // Fetch services
   useEffect(() => {
     if (!orgId) return;
-    fetch(`/api/services?orgId=${orgId}`)
+    fetch(`/api/widget/services?orgId=${orgId}`)
       .then((r) => r.json())
-      .then((data) => setServices(data.services || []))
+      .then((data) => {
+        setServices(data.services || []);
+        if (data.timezone) setOrgTimezone(data.timezone);
+      })
       .catch(() => {});
   }, [orgId]);
 
-  // Fetch available slots
   const fetchSlots = useCallback(async () => {
     if (!orgId || !selectedService || !selectedDate) return;
     setLoading(true);
@@ -90,14 +91,15 @@ export default function WidgetPage() {
     setError("");
 
     try {
-      // Create or find customer
       const bookingRes = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           organizationId: orgId,
           serviceId: selectedService.id,
-          customerId: "temp", // TODO: proper customer creation
+          customerName: name,
+          customerEmail: email || undefined,
+          customerPhone: phone,
           startsAt: selectedSlot.startsAt,
           channel: "web",
         }),
@@ -111,7 +113,6 @@ export default function WidgetPage() {
       }
 
       setManageUrl(`/bookings/manage/${data.booking.manageToken}`);
-      setBookingComplete(true);
       setStep("confirm");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -121,7 +122,7 @@ export default function WidgetPage() {
   };
 
   const formatPrice = (cents: number, currency: string) => {
-    return new Intl.NumberFormat("en-NG", {
+    return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
       minimumFractionDigits: 0,
@@ -129,19 +130,21 @@ export default function WidgetPage() {
   };
 
   const formatTime = (iso: string) => {
-    return new Date(iso).toLocaleTimeString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-    });
+      timeZone: orgTimezone,
+    }).format(new Date(iso));
   };
 
   const formatDate = (iso: string) => {
-    return new Date(iso).toLocaleDateString("en-US", {
+    return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    });
+      timeZone: orgTimezone,
+    }).format(new Date(iso));
   };
 
   if (!orgId) {
@@ -162,7 +165,7 @@ export default function WidgetPage() {
     <div className="min-h-screen bg-white">
       <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
         <h1 className="text-lg font-semibold text-gray-900">
-          {bookingComplete ? "Booking Confirmed" : "Book an Appointment"}
+          {step === "confirm" ? "Booking Confirmed" : "Book an Appointment"}
         </h1>
       </div>
 
@@ -173,7 +176,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 1: Service */}
         {step === "service" && (
           <div className="space-y-3">
             <p className="text-sm text-gray-500">Select a service</p>
@@ -214,7 +216,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 2: Date/Time */}
         {step === "datetime" && (
           <div className="space-y-4">
             <button
@@ -297,7 +298,6 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 3: Details */}
         {step === "details" && (
           <div className="space-y-4">
             <button
@@ -329,7 +329,7 @@ export default function WidgetPage() {
               id="phone"
               label="Phone Number"
               type="tel"
-              placeholder="+234 xxx xxx xxxx"
+              placeholder="+1 (555) 123-4567"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
@@ -353,8 +353,7 @@ export default function WidgetPage() {
           </div>
         )}
 
-        {/* Step 4: Confirmation */}
-        {step === "confirm" && bookingComplete && (
+        {step === "confirm" && (
           <div className="space-y-4 py-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
               <svg
@@ -388,11 +387,28 @@ export default function WidgetPage() {
               </p>
             </div>
             <p className="text-xs text-gray-400">
-              Manage your booking: {manageUrl}
+              Manage your booking:{" "}
+              <a href={manageUrl} className="text-indigo-600 hover:text-indigo-500 underline">
+                {manageUrl}
+              </a>
             </p>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+export default function WidgetPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <p className="text-sm text-gray-400">Loading...</p>
+        </div>
+      }
+    >
+      <WidgetContent />
+    </Suspense>
   );
 }
