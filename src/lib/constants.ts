@@ -34,6 +34,7 @@ export const ACCOUNT_STATUS = {
   PENDING: "pending",
   EMAIL_VERIFIED: "email_verified",
   ACTIVE: "active",
+  INACTIVE: "inactive",
 } as const;
 
 export type AccountStatus =

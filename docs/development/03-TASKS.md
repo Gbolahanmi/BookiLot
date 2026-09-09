@@ -13,6 +13,9 @@ Who can cancle the bookings, auditLog,
 bookings page should atleast show calender n table even if no bookings yet when show error or empty state under
 sms not tested
 
+Delaying Inggest for now
+Email spam
+
 ## P0 — Must Fix Before MVP
 
 ### T1: Render `<Toaster />` in root layout

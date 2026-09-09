@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Play, Check } from "lucide-react";
 
 const SERVICES = [
   { id: 1, name: "Haircut", duration: "30 min", price: "$25", icon: "✂️" },
@@ -35,25 +36,21 @@ function getDates() {
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-white pt-24 pb-16 lg:pt-32 lg:pb-24">
-      {/* Background gradient */}
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]" />
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center">
-          {/* Headline */}
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
             Never miss another booking
             <br />
             <span className="text-indigo-600">even when you don&apos;t pick up.</span>
           </h1>
 
-          {/* Subheadline */}
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-gray-600">
             Let customers book by web, text, or a phone call answered by your AI
             receptionist — synced to one calendar.
           </p>
 
-          {/* CTAs */}
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link
               href="/register"
@@ -62,25 +59,20 @@ export function Hero() {
               Start free trial
             </Link>
             <button className="flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <Play className="h-4 w-4" fill="currentColor" />
               Watch 90-second demo
             </button>
           </div>
 
-          {/* Trust line */}
           <p className="mt-4 text-sm text-gray-500">
             Free for up to 50 bookings/month. No card required.
           </p>
         </div>
 
-        {/* Interactive Widget Demo */}
         <div className="mt-16 flex justify-center">
           <BookingDemo />
         </div>
 
-        {/* Social proof */}
         <div className="mt-16 text-center">
           <p className="text-sm font-medium text-gray-400">
             Trusted by 2,500+ businesses worldwide
@@ -138,14 +130,11 @@ function BookingDemo() {
 
   return (
     <div className="w-full max-w-md">
-      {/* Phone frame */}
       <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl">
-        {/* Notch */}
         <div className="flex justify-center bg-gray-50 py-2">
           <div className="h-1.5 w-16 rounded-full bg-gray-200" />
         </div>
 
-        {/* Step indicator */}
         {!confirmed && (
           <div className="flex items-center justify-center gap-2 bg-gray-50 px-6 py-3">
             {[1, 2, 3].map((s) => (
@@ -171,21 +160,11 @@ function BookingDemo() {
           </div>
         )}
 
-        {/* Content */}
         <div className="p-6">
           {confirmed ? (
-            /* Step 3: Success */
             <div className="flex flex-col items-center py-8">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-                <svg
-                  className="h-8 w-8 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <Check className="h-8 w-8 text-green-600" strokeWidth={2.5} />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-900">
                 Booking confirmed!
@@ -201,7 +180,6 @@ function BookingDemo() {
               </button>
             </div>
           ) : step === 1 ? (
-            /* Step 1: Pick Service */
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 Pick a service
@@ -230,12 +208,10 @@ function BookingDemo() {
               </div>
             </div>
           ) : step === 2 ? (
-            /* Step 2: Pick Date & Time */
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 Pick a date
               </h3>
-              {/* Date grid */}
               <div className="mt-4 grid grid-cols-7 gap-1">
                 {dates.map((d) => (
                   <button
@@ -253,7 +229,6 @@ function BookingDemo() {
                 ))}
               </div>
 
-              {/* Time slots */}
               {selectedDate && (
                 <>
                   <h3 className="mt-6 text-base font-semibold text-gray-900">
@@ -278,7 +253,6 @@ function BookingDemo() {
               )}
             </div>
           ) : (
-            /* Step 3: Confirm */
             <div>
               <h3 className="text-base font-semibold text-gray-900">
                 Confirm your booking

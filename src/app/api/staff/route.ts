@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { staffMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { staffMembers, invites } from "@/lib/db/schema";
+import { eq, and, isNull } from "drizzle-orm";
 import { requireOwner, requireStaff } from "@/lib/auth/tenant";
 
 const createStaffSchema = z.object({
@@ -14,6 +14,7 @@ const createStaffSchema = z.object({
 
 /**
  * GET /api/staff — returns staff for the authenticated user's org
+ * Includes pending invite token via LEFT JOIN for invited (non-active) staff.
  */
 export async function GET() {
   const user = await requireStaff();
@@ -26,8 +27,29 @@ export async function GET() {
   }
 
   const result = await db
-    .select()
+    .select({
+      id: staffMembers.id,
+      organizationId: staffMembers.organizationId,
+      userId: staffMembers.userId,
+      displayName: staffMembers.displayName,
+      email: staffMembers.email,
+      bio: staffMembers.bio,
+      avatarUrl: staffMembers.avatarUrl,
+      status: staffMembers.status,
+      canEditHours: staffMembers.canEditHours,
+      active: staffMembers.active,
+      createdAt: staffMembers.createdAt,
+      updatedAt: staffMembers.updatedAt,
+      inviteToken: invites.token,
+    })
     .from(staffMembers)
+    .leftJoin(
+      invites,
+      and(
+        eq(staffMembers.id, invites.staffMemberId),
+        isNull(invites.acceptedAt)
+      )
+    )
     .where(
       and(
         eq(staffMembers.organizationId, user.organizationId),

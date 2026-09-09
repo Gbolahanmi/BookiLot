@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import useSWR from "swr";
-import { StaffLayout } from "@/components/layout/staff-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
@@ -44,8 +43,7 @@ export default function StaffProfilePage() {
   };
 
   return (
-    <StaffLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
 
         {error && (
@@ -91,6 +89,5 @@ export default function StaffProfilePage() {
           )}
         </div>
       </div>
-    </StaffLayout>
   );
 }

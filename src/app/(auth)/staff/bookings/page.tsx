@@ -1,7 +1,6 @@
 "use client";
 
 import useSWR from "swr";
-import { StaffLayout } from "@/components/layout/staff-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -47,8 +46,7 @@ export default function StaffBookingsPage() {
   const tz = data?.timezone || "UTC";
 
   return (
-    <StaffLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">My Bookings</h1>
 
         {error && (
@@ -99,6 +97,5 @@ export default function StaffBookingsPage() {
           )}
         </div>
       </div>
-    </StaffLayout>
   );
 }

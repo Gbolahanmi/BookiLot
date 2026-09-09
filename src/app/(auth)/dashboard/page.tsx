@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/ToastContext";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,9 +33,8 @@ export default function DashboardPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
         {/* Error banner */}
         {(statsError || bookingsError) && (
@@ -145,7 +143,6 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

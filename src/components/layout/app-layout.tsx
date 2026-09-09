@@ -1,17 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { StaffSidebar } from "./staff-sidebar";
+import { Sidebar } from "./sidebar";
+import { OnboardingBanner } from "./onboarding-banner";
 import { signOut, useSession } from "next-auth/react";
+import { NAV_ITEMS, STAFF_NAV_ITEMS } from "@/lib/constants";
 
-export function StaffLayout({ children }: { children: React.ReactNode }) {
-  const { data: session } = useSession();
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
   const user = session?.user;
+  const role = user?.role;
+  const userStatus = user?.status;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      </div>
+    );
+  }
+
+  const isStaff = role === "staff";
+  const sidebarItems = isStaff ? STAFF_NAV_ITEMS : NAV_ITEMS;
+  const logoHref = isStaff ? "/staff/dashboard" : "/dashboard";
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <StaffSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        items={sidebarItems}
+        logoHref={logoHref}
+      />
       <div className="lg:pl-64">
         <header className="sticky top-0 z-40 flex h-16 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:px-6">
           <button
@@ -51,6 +72,9 @@ export function StaffLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="p-4 sm:p-6 lg:p-8">
+          {!isStaff && userStatus !== "email_verified" && userStatus !== "active" ? (
+            <OnboardingBanner />
+          ) : null}
           {children}
         </main>
       </div>

@@ -1,5 +1,11 @@
 import { serve } from "inngest/next";
-import { inngest, sendReminder, handleNoShows } from "@/lib/jobs/inngest";
+import {
+  inngest,
+  sendReminder,
+  handleNoShows,
+  sendCancellationNotification,
+  cleanupInvites,
+} from "@/lib/jobs/inngest";
 
 /**
  * Inngest API handler — POST /api/inngest
@@ -7,5 +13,5 @@ import { inngest, sendReminder, handleNoShows } from "@/lib/jobs/inngest";
  */
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [sendReminder, handleNoShows],
+  functions: [sendReminder, handleNoShows, sendCancellationNotification, cleanupInvites],
 });

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
@@ -116,8 +115,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
         {error && (
@@ -321,7 +319,6 @@ export default function SettingsPage() {
             </div>
           </>
         )}
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

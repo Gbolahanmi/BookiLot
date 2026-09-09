@@ -1,7 +1,6 @@
 "use client";
 
 import useSWR from "swr";
-import { StaffLayout } from "@/components/layout/staff-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -14,8 +13,7 @@ export default function StaffDashboardPage() {
   const bookingsLoading = !bookings && !bookingsError;
 
   return (
-    <StaffLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
 
         {(statsError || bookingsError) && (
@@ -73,6 +71,5 @@ export default function StaffDashboardPage() {
           )}
         </div>
       </div>
-    </StaffLayout>
   );
 }

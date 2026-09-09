@@ -1,3 +1,5 @@
+import { ChevronDown } from "lucide-react";
+
 const FAQ_ITEMS = [
   {
     question: "Do I need technical skills to set this up?",
@@ -53,19 +55,7 @@ export function Faq() {
               <summary className="flex cursor-pointer items-center justify-between text-left text-base font-semibold text-gray-900 transition-colors hover:text-indigo-600 [&::-webkit-details-marker]:hidden">
                 {item.question}
                 <span className="ml-6 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 transition-transform group-open:rotate-180">
-                  <svg
-                    className="h-4 w-4 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
                 </span>
               </summary>
               <p className="mt-3 text-sm leading-6 text-gray-600">

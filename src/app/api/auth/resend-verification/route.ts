@@ -9,16 +9,27 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-    if (!email) {
+    const email = (body as { email?: unknown })?.email;
+    if (typeof email !== "string" || !email.trim()) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
     const [user] = await db
-      .select({ id: users.id, email: users.email, name: users.name, status: users.status })
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        status: users.status,
+      })
       .from(users)
       .where(eq(users.email, normalizedEmail))
       .limit(1);
@@ -26,13 +37,16 @@ export async function POST(req: Request) {
     if (!user || user.status !== "pending") {
       return NextResponse.json(
         { message: "If an account exists, a verification link has been sent" },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
     const token = generateToken(user.id, user.email, "email_verification");
 
-    await sendVerificationEmail(user.email, { name: user.name || "there", token });
+    await sendVerificationEmail(user.email, {
+      name: user.name || "there",
+      token,
+    });
 
     return NextResponse.json({
       message: "If an account exists, a verification link has been sent",
@@ -41,7 +55,7 @@ export async function POST(req: Request) {
     console.error("Resend verification error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

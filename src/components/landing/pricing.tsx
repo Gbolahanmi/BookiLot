@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 
 const TIERS = [
   {
@@ -107,19 +108,7 @@ export function Pricing() {
                       key={feature}
                       className="flex items-center gap-3 text-sm text-gray-700"
                     >
-                      <svg
-                        className="h-5 w-5 flex-shrink-0 text-indigo-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M4.5 12.75l6 6 9-13.5"
-                        />
-                      </svg>
+                      <Check className="h-5 w-5 flex-shrink-0 text-indigo-600" />
                       {feature}
                     </li>
                   ))}
@@ -141,7 +130,6 @@ export function Pricing() {
         </div>
       </section>
 
-      {/* Final CTA banner */}
       <section className="bg-indigo-600 py-16">
         <div className="mx-auto max-w-4xl px-6 text-center lg:px-8">
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">

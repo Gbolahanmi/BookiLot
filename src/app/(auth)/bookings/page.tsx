@@ -15,7 +15,6 @@ import {
   subMonths,
   parseISO,
 } from "date-fns";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/ToastContext";
@@ -115,8 +114,7 @@ export default function BookingsPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
           <div className="flex gap-2">
@@ -391,7 +389,6 @@ export default function BookingsPage() {
             </div>
           )}
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

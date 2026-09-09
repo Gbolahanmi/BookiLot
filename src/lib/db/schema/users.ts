@@ -6,6 +6,7 @@ export const accountStatusEnum = pgEnum("account_status", [
   "pending",
   "email_verified",
   "active",
+  "inactive",
 ]);
 
 export const users = pgTable("users", {

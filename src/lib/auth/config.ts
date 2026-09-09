@@ -130,7 +130,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = (token.role as "owner" | "staff" | "super_admin") || "owner";
-        session.user.status = (token.status as "pending" | "email_verified" | "active") || "pending";
+        session.user.status = (token.status as "pending" | "email_verified" | "active" | "inactive") || "pending";
         session.user.organizationId = (token.organizationId as string) || null;
       }
       return session;

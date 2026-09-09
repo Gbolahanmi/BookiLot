@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -63,8 +62,7 @@ export default function BillingPage() {
   const usagePercent = maxBookings === -1 ? 0 : Math.min((bookingsUsed / maxBookings) * 100, 100);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
 
         {error && (
@@ -190,7 +188,6 @@ export default function BillingPage() {
             </div>
           </>
         )}
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

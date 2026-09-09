@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { bookings } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireStaff } from "@/lib/auth/tenant";
+import { inngest } from "@/lib/jobs/inngest";
 
 /**
  * POST /api/bookings/[id]/cancel — cancel a booking
@@ -46,6 +47,12 @@ export async function POST(
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(eq(bookings.id, id))
     .returning();
+
+  // Fire cancellation notification event
+  await inngest.send({
+    name: "booking.cancelled",
+    data: { bookingId: id },
+  });
 
   return NextResponse.json({ booking: updated });
 }

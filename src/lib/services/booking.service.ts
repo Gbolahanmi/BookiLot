@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { bookings, customers, services, staffMembers, organizations } from "@/lib/db/schema";
 import { eq, and, gte, lte, ne, sql } from "drizzle-orm";
-import { generateToken } from "@/lib/utils";
+import { generateToken } from "@/lib/utils/server";
 import {
   BOOKING_STATUS,
   CANCELLATION_WINDOW_HOURS,
@@ -92,7 +92,7 @@ export async function createBooking(
   }
 
   // 4. Create the booking
-  const manageToken = generateToken(32);
+  const manageToken = generateToken();
 
   const [booking] = await db
     .insert(bookings)

@@ -9,6 +9,7 @@
 5. **Empty states are content** — Every empty state tells the user what to do next.
    Only install tailwinnd component when its really important else build custom reusable component
    Don't use CSS icons svg
+   Know that I want to really reduce/remove as many files as possible if use isn't so far fetched or can be shared by another
 
 ---
 

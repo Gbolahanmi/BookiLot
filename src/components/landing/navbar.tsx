@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
@@ -28,12 +29,10 @@ export function Navbar() {
       }`}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-        {/* Logo */}
         <Link href="/" className="text-xl font-bold text-indigo-600">
           Bookilot
         </Link>
 
-        {/* Desktop nav links */}
         <div className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
             <a
@@ -46,7 +45,6 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Desktop right side */}
         <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/login"
@@ -62,25 +60,15 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 md:hidden"
           aria-label="Toggle menu"
         >
-          {mobileOpen ? (
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          )}
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </nav>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <div className="border-t border-gray-200 bg-white md:hidden">
           <div className="space-y-1 px-6 py-4">

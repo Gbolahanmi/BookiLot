@@ -5,6 +5,19 @@ export interface TemplateParams {
 export interface EmailTemplate {
   subject: string;
   html: string;
+  text: string;
+}
+
+const FOOTER_TEXT = "\n\nThis email was sent by Bookilot.\nBookilot, Lagos, Nigeria.";
+
+function button(url: string, text: string): string {
+  return `
+    <div style="margin: 24px 0;">
+      <a href="${url}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+        ${text}
+      </a>
+    </div>
+  `;
 }
 
 function baseLayout(content: string): string {
@@ -28,7 +41,8 @@ function baseLayout(content: string): string {
               <tr>
                 <td style="padding: 16px 40px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
                   <p style="margin: 0; font-size: 12px; color: #9ca3af; text-align: center;">
-                    This email was sent by Bookilot
+                    This email was sent by Bookilot<br/>
+                    Bookilot, Lagos, Nigeria
                   </p>
                 </td>
               </tr>
@@ -38,30 +52,6 @@ function baseLayout(content: string): string {
       </table>
     </body>
     </html>
-  `;
-}
-
-function button(url: string, text: string): string {
-  return `
-    <div style="margin: 24px 0;">
-      <a href="${url}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
-        ${text}
-      </a>
-    </div>
-  `;
-}
-
-function infoBox(rows: { label: string; value: string }[]): string {
-  const cells = rows
-    .map(
-      (r) =>
-        `<p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>${r.label}:</strong> ${r.value}</p>`
-    )
-    .join("");
-  return `
-    <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-      ${cells}
-    </div>
   `;
 }
 
@@ -83,6 +73,15 @@ export function verificationTemplate(params: {
         This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.
       </p>
     `),
+    text: `Welcome to Bookilot!
+
+Hi ${params.name},
+
+Thanks for signing up. Verify your email by visiting the link below:
+
+${params.url}
+
+This link expires in 24 hours. If you didn't create this account, you can safely ignore this email.${FOOTER_TEXT}`,
   };
 }
 
@@ -105,6 +104,15 @@ export function passwordResetTemplate(params: {
         If you didn't request this, you can safely ignore this email.
       </p>
     `),
+    text: `Password Reset
+
+You requested a password reset for your Bookilot account.
+
+Set a new password by visiting the link below:
+
+${params.url}
+
+This link expires in 1 hour. If you didn't request this, you can safely ignore this email.${FOOTER_TEXT}`,
   };
 }
 
@@ -126,16 +134,28 @@ export function bookingConfirmationTemplate(params: {
       <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">
         Your booking with <strong>${params.businessName}</strong> has been confirmed.
       </p>
-      ${infoBox([
-        { label: "Service", value: params.serviceName },
-        { label: "Date", value: params.date },
-        { label: "Time", value: params.time },
-        { label: "Duration", value: params.duration },
-      ])}
+      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Service:</strong> ${params.serviceName}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Date:</strong> ${params.date}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Time:</strong> ${params.time}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Duration:</strong> ${params.duration}</p>
+      </div>
       <p style="margin: 0 0 8px; font-size: 16px; color: #374151;">
         <a href="${params.manageUrl}" style="color: #4f46e5; text-decoration: none;">Manage or cancel your booking</a>
       </p>
     `),
+    text: `Booking Confirmed
+
+Hi ${params.customerName},
+
+Your booking with ${params.businessName} has been confirmed.
+
+Service: ${params.serviceName}
+Date: ${params.date}
+Time: ${params.time}
+Duration: ${params.duration}
+
+Manage or cancel your booking: ${params.manageUrl}${FOOTER_TEXT}`,
   };
 }
 
@@ -156,15 +176,26 @@ export function bookingReminderTemplate(params: {
       <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">
         This is a reminder that your appointment with <strong>${params.businessName}</strong> is tomorrow.
       </p>
-      ${infoBox([
-        { label: "Service", value: params.serviceName },
-        { label: "Date", value: params.date },
-        { label: "Time", value: params.time },
-      ])}
+      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Service:</strong> ${params.serviceName}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Date:</strong> ${params.date}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Time:</strong> ${params.time}</p>
+      </div>
       <p style="margin: 0 0 8px; font-size: 16px; color: #374151;">
         <a href="${params.manageUrl}" style="color: #4f46e5; text-decoration: none;">Manage or cancel your booking</a>
       </p>
     `),
+    text: `Appointment Reminder
+
+Hi ${params.customerName},
+
+This is a reminder that your appointment with ${params.businessName} is tomorrow.
+
+Service: ${params.serviceName}
+Date: ${params.date}
+Time: ${params.time}
+
+Manage or cancel your booking: ${params.manageUrl}${FOOTER_TEXT}`,
   };
 }
 
@@ -196,5 +227,61 @@ export function staffInviteTemplate(params: {
         This invitation expires in 7 days. If you didn't expect this, you can safely ignore this email.
       </p>
     `),
+    text: `You're Invited!
+
+Hi ${params.staffName},
+
+${params.ownerName} has invited you to join ${params.businessName} as a staff member on Bookilot.
+
+Once you accept, you'll be able to:
+- View your assigned bookings
+- Manage your availability (if enabled by owner)
+- See your schedule
+
+Accept the invitation by visiting the link below:
+
+${params.inviteUrl}
+
+This invitation expires in 7 days. If you didn't expect this, you can safely ignore this email.${FOOTER_TEXT}`,
+  };
+}
+
+// ─── Cancellation Email ───────────────────────────────────
+export function bookingCancellationTemplate(params: {
+  customerName: string;
+  businessName: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  manageUrl: string;
+}): EmailTemplate {
+  return {
+    subject: `Booking cancelled with ${params.businessName}`,
+    html: baseLayout(`
+      <h2 style="margin: 0 0 16px; font-size: 24px; color: #111827;">Booking Cancelled</h2>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">Hi ${params.customerName},</p>
+      <p style="margin: 0 0 16px; font-size: 16px; color: #374151;">
+        Your booking with <strong>${params.businessName}</strong> has been cancelled.
+      </p>
+      <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Service:</strong> ${params.serviceName}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Date:</strong> ${params.date}</p>
+        <p style="margin: 4px 0; font-size: 14px; color: #374151;"><strong>Time:</strong> ${params.time}</p>
+      </div>
+      <p style="margin: 0 0 8px; font-size: 16px; color: #374151;">
+        <a href="${params.manageUrl}" style="color: #4f46e5; text-decoration: none;">Rebook your appointment</a>
+      </p>
+    `),
+    text: `Booking Cancelled
+
+Hi ${params.customerName},
+
+Your booking with ${params.businessName} has been cancelled.
+
+Service: ${params.serviceName}
+Date: ${params.date}
+Time: ${params.time}
+
+Rebook your appointment: ${params.manageUrl}${FOOTER_TEXT}`,
   };
 }

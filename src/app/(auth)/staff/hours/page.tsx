@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import useSWR from "swr";
-import { StaffLayout } from "@/components/layout/staff-layout";
 import { Button } from "@/components/ui/button";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/ToastContext";
@@ -70,8 +69,7 @@ export default function StaffHoursPage() {
   };
 
   return (
-    <StaffLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <h1 className="text-2xl font-bold text-gray-900">My Hours</h1>
 
         {error && (
@@ -141,6 +139,5 @@ export default function StaffHoursPage() {
           )}
         </div>
       </div>
-    </StaffLayout>
   );
 }

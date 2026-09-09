@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { staffMembers } from "@/lib/db/schema";
+import { staffMembers, users, invites } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { requireOwner } from "@/lib/auth/tenant";
 
@@ -59,7 +59,7 @@ export async function PATCH(
 }
 
 /**
- * DELETE /api/staff/[id] — soft delete
+ * DELETE /api/staff/[id] — soft delete staff + deactivate user + clean up invites
  */
 export async function DELETE(
   _request: NextRequest,
@@ -76,19 +76,39 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const [updated] = await db
-    .update(staffMembers)
-    .set({ active: false, updatedAt: new Date() })
+  // Verify the staff member exists and belongs to this org
+  const [existing] = await db
+    .select()
+    .from(staffMembers)
     .where(
       and(
         eq(staffMembers.id, id),
         eq(staffMembers.organizationId, user.organizationId)
       )
     )
-    .returning();
+    .limit(1);
 
-  if (!updated) {
+  if (!existing) {
     return NextResponse.json({ error: "Staff not found" }, { status: 404 });
+  }
+
+  // Soft delete the staff member
+  await db
+    .update(staffMembers)
+    .set({ active: false, status: "removed", updatedAt: new Date() })
+    .where(eq(staffMembers.id, id));
+
+  // Delete any pending invites for this staff member
+  await db
+    .delete(invites)
+    .where(eq(invites.staffMemberId, id));
+
+  // Deactivate the linked user account so they can't log in
+  if (existing.userId) {
+    await db
+      .update(users)
+      .set({ status: "inactive", updatedAt: new Date() })
+      .where(eq(users.id, existing.userId));
   }
 
   return NextResponse.json({ success: true });

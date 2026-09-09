@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 
-// Routes that require authentication
 const protectedRoutes = [
   "/dashboard",
   "/bookings",
@@ -13,29 +12,15 @@ const protectedRoutes = [
   "/onboarding",
 ];
 
-// Routes only accessible with "pending" status (unverified)
-const pendingOnlyRoutes = [
-  "/verify-email",
-];
+const pendingOnlyRoutes = ["/verify-email"];
 
-// Routes that require active status (onboarding complete)
-const activeOnlyRoutes = [
-  "/settings",
-  "/billing",
-  "/staff",
-];
+const activeOnlyRoutes = ["/settings", "/billing", "/staff"];
 
-// API routes that require authentication
-const protectedApiRoutes = [
-  "/api/services",
-  "/api/staff",
-  "/api/customers",
-];
+const protectedApiRoutes = ["/api/services", "/api/staff", "/api/customers"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Public routes — always allowed
   const isPublicRoute =
     pathname === "/" ||
     pathname === "/login" ||
@@ -58,17 +43,22 @@ export default auth((req) => {
     protectedRoutes.some((route) => pathname.startsWith(route)) ||
     protectedApiRoutes.some((route) => pathname.startsWith(route));
 
-  // Not logged in → redirect to login
   if (isProtected && !req.auth) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Logged in user — check status
   if (req.auth) {
     const status = req.auth.user?.status || "pending";
     const orgId = req.auth.user?.organizationId;
+
+    // Inactive users (deactivated staff) → block everything
+    if (status === "inactive") {
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("error", "account_deactivated");
+      return NextResponse.redirect(loginUrl);
+    }
 
     // Pending users: only allow /verify-email
     if (status === "pending") {
@@ -81,32 +71,46 @@ export default auth((req) => {
       }
     }
 
-    // Email-verified users: redirect to /onboarding if no org, block owner-only features
-    if (status === "email_verified") {
-      // No org yet → must complete onboarding
-      if (!orgId && pathname !== "/onboarding") {
-        return NextResponse.redirect(new URL("/onboarding", req.url));
-      }
-      // Has org → block owner-only features (they're "active" in practice)
-      if (orgId) {
-        const isBlockedForUnverified =
-          activeOnlyRoutes.some((route) => pathname.startsWith(route));
-        if (isBlockedForUnverified) {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
+    // Email-verified users: redirect to /onboarding if no org
+    if (status === "email_verified" && !orgId && pathname !== "/onboarding") {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+
+    // Active-only routes require "active" status
+    if (status !== "active") {
+      const isActiveOnly = activeOnlyRoutes.some((route) =>
+        pathname.startsWith(route)
+      );
+      if (isActiveOnly) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
 
-    // Active users: block onboarding (already completed)
+    // Active users: block onboarding
     if (status === "active" && pathname === "/onboarding") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Role-based routing
+    const role = req.auth.user?.role;
+
+    const ownerOnlyRoutes = ["/dashboard", "/bookings", "/services", "/customers", "/settings", "/billing"];
+    const isOwnerOnlyPage = ownerOnlyRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
+
+    const staffSelfServiceRoutes = ["/staff/dashboard", "/staff/bookings", "/staff/hours", "/staff/profile"];
+    const isStaffSelfService = staffSelfServiceRoutes.some((r) => pathname === r || pathname.startsWith(r + "/"));
+
+    if (role === "staff" && isOwnerOnlyPage) {
+      return NextResponse.redirect(new URL("/staff/dashboard", req.url));
+    }
+
+    if (role === "owner" && isStaffSelfService) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     // Verified/active users trying to access pending-only routes
     if (status !== "pending") {
-      const isPendingOnly =
-        pendingOnlyRoutes.some((route) => pathname.startsWith(route));
-
+      const isPendingOnly = pendingOnlyRoutes.some((route) => pathname.startsWith(route));
       if (isPendingOnly) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }

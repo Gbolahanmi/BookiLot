@@ -33,7 +33,7 @@ import { useCallback, useEffect, useRef } from "react";
 //     };
 // }
 
-export function useDebounce<T extends (...args: any[]) => void>(
+export function useDebounce<T extends (...args: never[]) => void>(
   func: T,
   delay: number,
 ): (...args: Parameters<T>) => void {

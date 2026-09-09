@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SkeletonCard } from "@/components/ui/skeleton";
@@ -166,8 +165,7 @@ export default function StaffPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
           <Button onClick={() => setShowInviteForm(true)}>Invite Staff Member</Button>
@@ -328,6 +326,5 @@ export default function StaffPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

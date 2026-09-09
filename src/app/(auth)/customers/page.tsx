@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Input } from "@/components/ui/input";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -31,8 +30,7 @@ export default function CustomersPage() {
   );
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
           <div className="w-full sm:w-64">
@@ -121,7 +119,6 @@ export default function CustomersPage() {
             </>
           )}
         </div>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

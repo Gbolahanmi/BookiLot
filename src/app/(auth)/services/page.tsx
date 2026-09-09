@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ServiceModal } from "@/components/services/service-modal";
@@ -52,7 +51,7 @@ export default function ServicesPage() {
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Services</h1>
@@ -124,6 +123,6 @@ export default function ServicesPage() {
         service={editing}
         onSaved={() => mutate()}
       />
-    </DashboardLayout>
+    </>
   );
 }
